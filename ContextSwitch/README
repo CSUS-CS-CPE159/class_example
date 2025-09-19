@@ -1,0 +1,10 @@
+
+### Context Switch
+* This document helps people understand the context switch.
+* CS register can't manual update. You need to use interrupt or other way. 
+* Carefully understand the context switch.
+* reference:
+    - https://www.felixcloutier.com/x86/pusha:pushad
+
+
+
