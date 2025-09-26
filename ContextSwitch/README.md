@@ -8,8 +8,9 @@
 
 
 ### Case study
-* process A is running. 
-|process A                                                            :Stack|                          kernel stack|
+* process A is running.
+
+Memory content:  |process A                                                  <span style="color: red;">:Stack</span>|                          kernel stack|
 * timer device triger a intetrrupt: TimerEntry
 ```
 ENTRY(TimerEntry)  // push eflag, cs, eip (by hardware)
@@ -18,7 +19,7 @@ ENTRY(TimerEntry)  // push eflag, cs, eip (by hardware)
     // Enter into the kernel context for processing
     jmp kernel_enter
 ```
-|process A                                               :eip:cs:eflag:Stack|                          kernel stack|
+Memory:  |process A                                               <span style="color: red;">:eip:cs:eflag:Stack</span>|                          kernel stack|
 * save all register information into user stack 
 ```
 /**
@@ -36,7 +37,7 @@ kernel_enter:
     pushl %fs
     pushl %gs
 ```
-|process A                 gs:fs:es:ds:ss:edx:ecx:ebx:eax:eip:cs:eflag:Stack|                          kernel stack|
+Memory:  |process A                 <span style="color: red;">gs:fs:es:ds:ss:edx:ecx:ebx:eax:eip:cs:eflag:Stack</span>|                          kernel stack|
 * Switch to kernel stack (update ds, es register)
 ```
     // Save user stack address
@@ -47,7 +48,7 @@ kernel_enter:
     mov %ax, %es
     leal kstack + 16384, %esp
 ```
-|process A                 gs:fs:es:ds:ss:edx:ecx:ebx:eax:eip:cs:eflag:Stack|                 user esp:kernel stack|
+Memory:  |process A                 gs:fs:es:ds:ss:edx:ecx:ebx:eax:eip:cs:eflag:Stack|                 <span style="color: red;">user esp:kernel stack</span>|
 ```
     // save esp address to process frame
     pushl %edx
@@ -67,13 +68,13 @@ kernel_enter:
  */
 ENTRY(kernel_context_exit)
 ```
-|process A                 gs:fs:es:ds:ss:edx:ecx:ebx:eax:eip:cs:eflag:Stack|                 user esp:kernel stack|
+Memory:  |process A                 gs:fs:es:ds:ss:edx:ecx:ebx:eax:eip:cs:eflag:Stack|                 <span style="color: red;">user esp:kernel stack</span>|
 * Load the stack pointer
 ```
     movl 4(%esp), %eax
     movl %eax, %esp
 ```
-|process A                 gs:fs:es:ds:ss:edx:ecx:ebx:eax:eip:cs:eflag:Stack|                 user esp:kernel stack|
+Memory:  |process A                 <span style="color: red;">gs:fs:es:ds:ss:edx:ecx:ebx:eax:eip:cs:eflag:Stack</span>|                 :kernel stack|
 * restore the register status
 ```
     // Restore register state
@@ -89,3 +90,4 @@ ENTRY(kernel_context_exit)
     add $4, %esp
     iret // automatically pop eip, cs, eflag by hardware
 ```
+Memory:  |process A                 <span style="color: red;">:Stack</span>|                 :kernel stack|
