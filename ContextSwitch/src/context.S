@@ -30,8 +30,9 @@ kernel_enter:
     pushl %es
     pushl %fs
     pushl %gs
-    // Load the kernel stack
+    // Save user stack address
     movl %esp, %edx
+    // Load the kernel stack
     cld
     movw $(0x10), %ax
     mov %ax, %ds
