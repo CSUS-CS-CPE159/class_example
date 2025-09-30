@@ -6,6 +6,8 @@
 * reference:
     - https://www.felixcloutier.com/x86/pusha:pushad
 
+### How to check kstack address
+gdb: p (int)&kstack + 0x4000
 
 ### Case study
 * process A is running.
