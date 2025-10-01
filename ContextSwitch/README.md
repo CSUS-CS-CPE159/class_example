@@ -63,10 +63,11 @@ memory --> |process A                 gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx
 * Call Context Switch (user kernel stack to complete task)
 ```
     // Trigger entry into the kernel
-    call CNAME(context_switch) //push next_instruction, ebp, cs, callee_address 
+    call CNAME(context_switch) //push return_addr
+    // when you use debug mode to check stack content, please use stepi command. 
 ```
 
-memory --> |process A                 gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx:eax:eip:cs:eflag:Stack|                 <span style="color: red;">processA_esp:k_stack</span>|
+memory --> |process A                 gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx:eax:eip:cs:eflag:Stack|                 <span style="color: red;">return_addr:processA_esp:k_stack</span>|
 additional information: https://docs.google.com/document/d/1Of6DHIXRtkVtfyDj82JntVhWhxY4hZi8Y632JS780DM/edit?usp=sharing
 * return from Context Switch
 ```
