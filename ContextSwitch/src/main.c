@@ -1,9 +1,8 @@
 /* 
- * main.c -- Timer Event
+ * main.c -- Context Switch 
  */
 
 #include <spede/machine/io.h>
-#include <spede/machine/pic.h>
 #include <spede/machine/proc_reg.h>
 #include <spede/machine/seg.h>
 
@@ -11,10 +10,12 @@
 #include "process.h"
 #include "events.h"
 
+#define PIC_DATA 0x21
+
 struct i386_gate *IDT_p; 
 
 int main(){
-    // create two process for testing context switch
+    // create two simplified process for testing context switch
     create_processes();
 
     /* Set up interrupt */
@@ -24,11 +25,12 @@ int main(){
     // Customize the Time Interrup Entry 
     fill_gate(&IDT_p[32], (int)TimerEntry, get_cs(), ACC_INTR_GATE, 0);
     // 0x21 is prime PIC data register address. ~0x01 is 1111 1110 , enable the PIC interrupt 0
-    outportb(0x21, ~0x01); 
+    outportb(PIC_DATA, ~0x01); 
     // Enable CPU interrupt 
     asm("sti");	
-   
-    while(1){}
+  
+    // infinite loop
+    while(1);
 
     return 0;
 }

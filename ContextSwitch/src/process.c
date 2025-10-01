@@ -16,9 +16,6 @@ trapframe_t *p2_stack;
 
 /* Process One */
 void Process1(void){
-    cons_printf("This is the first process\n");
-    //uint32_t *x = (uint32_t *)0x10000000;
-    //*x = 20;
     while (1){
         cons_printf("This is the first process\n");
         for(uint32_t i = 0; i< 16660000; i++)
@@ -61,7 +58,13 @@ void create_processes(){
 
 void context_switch(trapframe_t *current) {
     // dismiss timer event (IRQ 0), otherwise, new event from timer won't be recognized by CPU
-	// because hardware uses edge-trigger flipflop
+    // because hardware uses edge-trigger flipflop
+    
+    /* Note: here, we should save the current trapframe information to PCB. 
+     * In this example, we don't have process control block to make our code as short as possible. 
+     * We didn't do it because we want to simplify our example.
+     * Each time, when context switch happens, the process will run from the scatch. 
+     * */
     outportb(0x20, 0x60);
     if (whoIsRunning == 0){
         // kernel is running
