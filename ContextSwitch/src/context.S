@@ -7,7 +7,7 @@
 #include <spede/machine/asmacros.h>
 
 // define kernel stack space
-.comm kstack, 16384, 1
+.comm kstack, 0x4000, 1
 .text
 
 ENTRY(TimerEntry)  // push eflag, cs, eip (by hardware)
