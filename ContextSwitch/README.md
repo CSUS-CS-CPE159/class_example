@@ -262,7 +262,7 @@ esp -->    |                |                 |         |
            |           spede stack (main)     |    spede stack
            |                                  |
          0 +----------------------------------+--------------
-`
+```
 ```
     // save esp address to process frame
     pushl %edx
@@ -318,7 +318,7 @@ esp -->    |          old esp (thread2 esp)   |         |
 0x011000   |----------------------------------|--------------
            |           spede stack (main)     |    spede stack
          0 +----------------------------------+--------------
-`
+```
 
 * Call Context Switch (user kernel stack to complete task)
 ```
@@ -445,7 +445,7 @@ esp -->    |          return addr             |         |
 0x011000   |----------------------------------|--------------
            |           spede stack (main)     |    spede stack
          0 +----------------------------------+--------------
-`
+```
 * Load the stack pointer
 ```
     movl 4(%esp), %eax
@@ -549,7 +549,7 @@ esp --->   |               gs                 |
 0x011000   |----------------------------------|--------------
            |           spede stack (main)     |    spede stack
          0 +----------------------------------+--------------
-`
+```
 * restore the register status
 ```
     // Restore register state
@@ -619,6 +619,6 @@ esp ---->  |                                  |
 0x011000   |----------------------------------|--------------
            |           spede stack (main)     |    spede stack
          0 +----------------------------------+--------------
-`
+```
 When next context switch happens, the kernel stack content will be overwrited. 
 
