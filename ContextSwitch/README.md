@@ -391,8 +391,6 @@ additional information: https://docs.google.com/document/d/1Of6DHIXRtkVtfyDj82Jn
  */
 ENTRY(kernel_context_exit)
 ```
-Memory Content:
-
 Memory content:
 ```
  PHYS_BASE +----------------------------------+
