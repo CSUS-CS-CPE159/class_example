@@ -52,13 +52,13 @@ gdb: p (int)&kstack + 0x4000
            |           Process2               |         ^ 
            |           Process1               |         |
            |                                  |     code segment (CS)
-           |           main()                 |         |
+eip--->    |           main()                 |         |
            |                                  |         V 
 0x101000   +----------------------------------+--------------
            |                                  |
            |                                  |
 0x011000   |----------------------------------|--------------
-           |           spede stack (main)     |    spede stack
+esp--->    |           spede stack (main)     |    spede stack
            |                                  |
          0 +----------------------------------+--------------
 ```
@@ -95,7 +95,7 @@ Memory content:
            |------thread2 stack end-----------|         |
            |             eflag                |
            |               cs                 |
-           |               eip                |
+esp-->     |               eip                |
            |                |                 |
 0x109180   |----------thread 2 stack----------|         |
            |                |                 |
@@ -173,7 +173,7 @@ Memory content:
            |               ds                 |
            |               es                 |
            |               fs                 |
-           |               gs                 |
+esp----->  |               gs                 |
            |                |                 |
 0x109180   |----------thread 2 stack----------|         |
            |                |                 |
@@ -199,7 +199,6 @@ Memory content:
            |                                  |
          0 +----------------------------------+--------------
 ```
-
 * Switch to kernel stack (update ds, es register)
 ```
     // Save user stack address
@@ -210,12 +209,116 @@ Memory content:
     mov %ax, %es
     leal kstack + 16384, %esp
 ```
-memory --> |process A                 gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx:eax:eip:cs:eflag:Stack|                 <span style="color: red;">processA_esp:k_stack</span>|
+Memory content:
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+esp -->    |                |                 |         |
+           |                |                 |         |
+           |                V                 |         |
+           |        grows  downward           |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |               eax                |
+           |               ecx                |
+           |               edx                |
+           |               ebx                |
+           |               esp                |
+           |               ebp                |
+           |               esi                |
+           |               edi                |
+           |               ss                 |
+           |               ds                 |
+           |               es                 |
+           |               fs                 |
+           |               gs                 |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+           |                |                 |         |
+           |                V                 |
+0x105180   |----------thread1 stack-----------|
+           |                                  |
+           |                                  |    data segment (DS)
+           +----------------------------------+         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2               |         ^ 
+           |           Process1               |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+           |                                  |
+         0 +----------------------------------+--------------
+`
 ```
     // save esp address to process frame
     pushl %edx
 ```
-memory --> |process A                 gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx:eax:eip:cs:eflag:Stack|                 <span style="color: red;">processA_esp:k_stack</span>|
+Memory content:
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+esp -->    |          old esp (thread2 esp)   |         |
+           |                |                 |         |
+           |                V                 |         |
+           |        grows  downward           |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |               eax                |
+           |               ecx                |
+           |               edx                |
+           |               ebx                |
+           |               esp                |
+           |               ebp                |
+           |               esi                |
+           |               edi                |
+           |               ss                 |
+           |               ds                 |
+           |               es                 |
+           |               fs                 |
+           |               gs                 |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+           |                |                 |         |
+           |                V                 |
+0x105180   |----------thread1 stack-----------|
+           |                                  |
+           |                                  |    data segment (DS)
+           +----------------------------------+         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2               |         ^ 
+           |           Process1               |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+         0 +----------------------------------+--------------
+`
 
 * Call Context Switch (user kernel stack to complete task)
 ```
@@ -224,7 +327,59 @@ memory --> |process A                 gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx
     // when you use debug mode to check stack content, please use stepi command. 
 ```
 
-memory --> |process A                 gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx:eax:eip:cs:eflag:Stack|                 <span style="color: red;">return_addr:processA_esp:k_stack</span>|
+Memory content:
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+           |          old esp (thread2 esp)   |         |
+esp -->    |          return addr             |         |
+           |                |                 |         |
+           |                V                 |         |
+           |        grows  downward           |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |               eax                |
+           |               ecx                |
+           |               edx                |
+           |               ebx                |
+           |               esp                |
+           |               ebp                |
+           |               esi                |
+           |               edi                |
+           |               ss                 |
+           |               ds                 |
+           |               es                 |
+           |               fs                 |
+           |               gs                 |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+           |                |                 |         |
+           |                V                 |
+0x105180   |----------thread1 stack-----------|
+           |                                  |
+           |                                  |    data segment (DS)
+           +----------------------------------+         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2               |         ^ 
+           |           Process1               |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+         0 +----------------------------------+--------------
+`
 additional information: https://docs.google.com/document/d/1Of6DHIXRtkVtfyDj82JntVhWhxY4hZi8Y632JS780DM/edit?usp=sharing
 * return from Context Switch
 ```
@@ -236,12 +391,70 @@ additional information: https://docs.google.com/document/d/1Of6DHIXRtkVtfyDj82Jn
  */
 ENTRY(kernel_context_exit)
 ```
-Memory:  |process B                 gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx:eax:eip:cs:eflag:Stack|                 <span style="color: red;">Callee_function_addr:Process_B_Stack:Process_A_stack:k_stack</span>|
+Memory Content:
+
+Memory content:
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+           |        old esp (thread2's esp)   |         |
+           |          return addr             |         |
+           |                ...               |         |
+           |          thread2's esp           |         |
+esp -->    |          return addr             |         |
+           |                                  |         |
+           |                                  |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |               eax                |
+           |               ecx                |
+           |               edx                |
+           |               ebx                |
+           |               esp                |
+           |               ebp                |
+           |               esi                |
+           |               edi                |
+           |               ss                 |
+           |               ds                 |
+           |               es                 |
+           |               fs                 |
+           |               gs                 |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+           |                |                 |         |
+           |                V                 |
+0x105180   |----------thread1 stack-----------|
+           |                                  |
+           |                                  |    data segment (DS)
+           +----------------------------------+         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2               |         ^ 
+           |           Process1               |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+         0 +----------------------------------+--------------
+`
 * Load the stack pointer
 ```
     movl 4(%esp), %eax
     movl %eax, %esp
 ```
+
+Notes: When we create a new process/thread, we will initialize the stack content for context switch, even we don't run this process/thread yet.  
 
 Check the following values:
 ```
@@ -270,8 +483,75 @@ SPEDE GDB$ x/x $esp + 4
 SPEDE GDB$ print p1_stack
 $1 = (trapframe_t *) 0x10913c <proc_stack+16316>
 ```
-
-Memory:  |process B                 <span style="color: red;">gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx:eax:eip:cs:eflag:Stack</span>|                 return_address:Process_B_Stack:Process_A_Stack:kernel stack|
+Memory Content:
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+           |        old esp (thread2's esp)   |         |
+           |          return addr             |         |
+           |                ...               |         |
+           |          thread2's esp           |         |
+           |          return addr             |         |
+           |                                  |         |
+           |                                  |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |               eax                |
+           |               ecx                |
+           |               edx                |
+           |               ebx                |
+           |               esp                |
+           |               ebp                |
+           |               esi                |
+           |               edi                |
+           |               ss                 |
+           |               ds                 |
+           |               es                 |
+           |               fs                 |
+           |               gs                 |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |               eax                |
+           |               ecx                |
+           |               edx                |
+           |               ebx                |
+           |               esp                |
+           |               ebp                |
+           |               esi                |
+           |               edi                |
+           |               ss                 |
+           |               ds                 |
+           |               es                 |
+           |               fs                 |
+esp --->   |               gs                 |
+           |                |                 |         |
+0x105180   |----------thread1 stack-----------|         |
+           |                                  |    data segment (DS)
+           +----------------------------------+         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2(thread2)      |         ^ 
+           |           Process1(thread1)      |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+         0 +----------------------------------+--------------
+`
 * restore the register status
 ```
     // Restore register state
@@ -287,7 +567,60 @@ Memory:  |process B                 <span style="color: red;">gs:fs:es:ds:ss:edi
     add $4, %esp
     iret // automatically pop eip, cs, eflag by hardware
 ```
-Memory:  |process B                 <span style="color: red;">:Stack</span>|                 return_address:Process_B_Stack:Process_A_Stack:kernel stack|
-
-when next context switch happens, the kernel stack content will be overwrited. 
+Memory Content: 
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+           |        old esp (thread2's esp)   |         |
+           |          return addr             |         |
+           |                ...               |         |
+           |          thread2's esp           |         |
+           |          return addr             |         |
+           |                                  |         |
+           |                                  |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |               eax                |
+           |               ecx                |
+           |               edx                |
+           |               ebx                |
+           |               esp                |
+           |               ebp                |
+           |               esi                |
+           |               edi                |
+           |               ss                 |
+           |               ds                 |
+           |               es                 |
+           |               fs                 |
+           |               gs                 |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+esp ---->  |                                  |
+           |                                  |
+           |                                  |         |
+0x105180   |----------thread1 stack-----------|         |
+           |                                  |    data segment (DS)
+           +----------------------------------+         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2(thread2)      |         ^ 
+           |           Process1(thread1)      |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+         0 +----------------------------------+--------------
+`
+When next context switch happens, the kernel stack content will be overwrited. 
 
