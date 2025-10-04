@@ -4,18 +4,67 @@
 * CS register can't manual update. You need to use interrupt or other way. 
 * reference:
     - https://www.felixcloutier.com/x86/pusha:pushad
-
-
 ### thinking and question?
 * In this case, after context switch, each process will start to run the code from scratch, do you know the reason?
 
 ### How to check kstack address
 gdb: p (int)&kstack + 0x4000
 
+### Memory layout
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           |                |                 |
+           |                |                 |
+           |                V                 |
+           |                                  |
+           |                ^                 |
+           |                |                 |
+           |                |                 |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+           |                |                 |         |
+           |                |                 |         |
+           |                V                 |         |
+           |        grows  downward           |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |                |                 |
+           |                V                 |
+           |           grows downward         |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+           |                |                 |         |
+           |                V                 |
+           |           grows downward         |
+           |                |                 |
+0x105180   |----------thread1 stack-----------|
+           |                                  |
+           |                                  |    data segment (DS)
+           | uninitialized data segment (BSS) |
+           +----------------------------------+         |
+           |     initialized data segment     |         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2               |         ^ 
+           |           Process1               |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+           |                                  |
+         0 +----------------------------------+--------------
+```
+
 ### Case study
 * process A is running.
-
-Memory content:  |process A                                                  <span style="color: red;">:Stack</span>|                          kernel stack|
 * timer device triger a intetrrupt: TimerEntry
 ```
 ENTRY(TimerEntry)  // push eflag, cs, eip (by hardware)
@@ -24,7 +73,54 @@ ENTRY(TimerEntry)  // push eflag, cs, eip (by hardware)
     // Enter into the kernel context for processing
     jmp kernel_enter
 ```
-Memory:  |process A                                               <span style="color: red;">:eip:cs:eflag:Stack</span>|                          kernel stack|
+Memory content:
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           |                |                 |
+           |                |                 |
+           |                V                 |
+           |                                  |
+           |                ^                 |
+           |                |                 |
+           |                |                 |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+           |                |                 |         |
+           |                |                 |         |
+           |                V                 |         |
+           |        grows  downward           |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+           |                |                 |         |
+           |                V                 |
+0x105180   |----------thread1 stack-----------|
+           |                                  |
+           |                                  |    data segment (DS)
+           +----------------------------------+         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2               |         ^ 
+           |           Process1               |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+           |                                  |
+         0 +----------------------------------+--------------
+```
 * save all register information into user stack 
 ```
 /**
@@ -42,7 +138,68 @@ kernel_enter:
     pushl %fs
     pushl %gs
 ```
-Memory:  |process A                 <span style="color: red;">gs:fs:es:ds:ss:edi:esi:ebp:esp:ebx:edx:ecx:eax:eip:cs:eflag:Stack</span>|                          kernel stack|
+Memory content:
+```
+ PHYS_BASE +----------------------------------+
+           |          unused space            |
+           |                |                 |
+           |                |                 |
+           |                V                 |
+           |                                  |
+           |                ^                 |
+           |                |                 |
+           |                |                 |
+           +----------------------------------+--------------
+0x1111b4   |------------kstack + 0x4000-------|         ^
+           |                |                 |         |
+           |                |                 |         |
+           |                V                 |         |
+           |        grows  downward           |         |
+0x10d1b4   |-------------stack----------------|         |
+           |                                  |         |
+           |------thread2 stack end-----------|         |
+           |             eflag                |
+           |               cs                 |
+           |               eip                |
+           |               eax                |
+           |               ecx                |
+           |               edx                |
+           |               ebx                |
+           |               esp                |
+           |               ebp                |
+           |               esi                |
+           |               edi                |
+           |               ss                 |
+           |               ds                 |
+           |               es                 |
+           |               fs                 |
+           |               gs                 |
+           |                |                 |
+0x109180   |----------thread 2 stack----------|         |
+           |                |                 |
+           |----------thread1 stack end-------|         |
+           |                |                 |         |
+           |                V                 |
+0x105180   |----------thread1 stack-----------|
+           |                                  |
+           |                                  |    data segment (DS)
+           +----------------------------------+         |
+           |             whoIsRunning         |         V
+           +----------------------------------+-------------
+           |           Process2               |         ^ 
+           |           Process1               |         |
+           |                                  |     code segment (CS)
+           |           main()                 |         |
+           |                                  |         V 
+0x101000   +----------------------------------+--------------
+           |                                  |
+           |                                  |
+0x011000   |----------------------------------|--------------
+           |           spede stack (main)     |    spede stack
+           |                                  |
+         0 +----------------------------------+--------------
+```
+
 * Switch to kernel stack (update ds, es register)
 ```
     // Save user stack address
