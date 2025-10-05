@@ -1,5 +1,4 @@
 /* 
- * main.c -- Timer Event
  */
 
 #include <spede/machine/proc_reg.h>
@@ -26,6 +25,7 @@ int main(){
     IDT_p = get_idt_base(); // get IDT location
     /* Register the interrupt 14: Page Fault*/
     fill_gate(&IDT_p[14], (int)PageFaultEntry, get_cs(), ACC_INTR_GATE, 0);
+ 
     Process();
-	return 0;
+    return 0;
 }

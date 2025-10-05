@@ -1,6 +1,5 @@
 /* 
  * GNU Assembly Code: AT & T
- * events.S -- Timer Event
  */
 
 #include <spede/machine/asmacros.h> 
