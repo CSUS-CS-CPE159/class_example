@@ -4,8 +4,6 @@
 * CS register can't manual update. You need to use interrupt or other way. 
 * reference:
     - https://www.felixcloutier.com/x86/pusha:pushad
-### thinking and question?
-* In this case, after context switch, each process will start to run the code from scratch, do you know the reason?
 
 ### How to check kstack address
 gdb: p (int)&kstack + 0x4000

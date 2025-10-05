@@ -7,10 +7,12 @@
 #include <spede/machine/asmacros.h>
 
 // define kernel stack space
+.comm kstack, 0x4000, 0x1000
 .text
 
 ENTRY(TimerEntry)  // push eflag, cs, eip (by hardware)
     // Indicate which interrupt occured
+    // push dummy value
     pushl $0x0
     pushl $0x20
     // Enter into the kernel context for processing
@@ -42,7 +44,6 @@ ENTRY(PageFaultEntry)  // push eflag, cs, eip (by hardware)
 kernel_enter:
     // Save register state
     pusha 
-    //pushl %ss
     pushl %ds
     pushl %es
     pushl %fs
@@ -54,11 +55,12 @@ kernel_enter:
     movw %ax, %es
     movw %ax, %fs
     movw %ax, %gs
+    leal kstack + 0x4000, %esp
     // save esp address to process frame
     pushl %ebx
     cld
     // Trigger entry into the kernel
-    call CNAME(context_switch)
+    call CNAME(kernel_event)
 
 /**
  * Exit the kernel context
@@ -76,7 +78,6 @@ ENTRY(kernel_context_exit)
     popl %fs
     popl %es
     popl %ds
-
     popa
     // When kernel context was entered, the interrupt number
     // was pushed to the stack, so adjust the stack pointer
