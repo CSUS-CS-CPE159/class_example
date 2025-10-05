@@ -1,8 +1,8 @@
 #ifndef _TYPES_H_
 #define _TYPES_H_
 
-#define STACK_SIZE      16384
-#define TIMER_EVENT     32 // 32-bit long
+#define STACK_SIZE      0x1000	    // 0x1000 is 16384
+#define TIMER_EVENT     0x20 	    // 0x20 is 32
 
 typedef unsigned short seg_type_t;  // 16-bit segment value
 
