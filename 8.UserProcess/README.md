@@ -1,35 +1,120 @@
 
-### Context Switch
-* This document helps people understand the context switch.
-* CS register can't manual update. You need to use interrupt or other way. 
-* Carefully understand the context switch.
+### User Process
+* This document helps people understand user process and how to configure user mode and kernel mode.
 * reference:
-    - https://www.felixcloutier.com/x86/pusha:pushad
-
-### Stupid mistakes I made
-* typed struct error
+    - https://wiki.osdev.org/Global_Descriptor_Table 
+### 32 bits GDT table entry
+In SPEDE, the entries in the GDT are 8 bytes long and form a table like this:
 ```
-typed struct proc_t {...} proc_t;
+Global Descriptor Table
+----------------------
+Address             |   Entry       |   Content  
+GDTR offset + 0     |   NULL        |   NULL
+GDTR offset + 0x8   |   Entry 1     |   kernel Code 
+GDTR offset + 0x10  |   Entry 2     |   kernel Data
+GDTR offset + 0x18  |   Entry 3     |   kernel Stack
+GDTR offset + 0x20  |   Entry 4     |   Unknown
+GDTR offset + 0x28  |   Entry 5     |   Unknown
+GDTR offset + 0x30  |   Entry 6     |   User Code
+GDTR offset + 0x38  |   Entry 7     |   User Data
+GDTR offset + 0x40  |   Entry 8     |   user Stack
+GDTR offset + 0x48  |   Entry 9     |   kernel TSS
 ```
-* Memcpy error. 
+How to check GDTR content
 ```
-memcpy();
+GDB$ x/64b GDT_p
+0xfb1e:	0xff	0xff	0x1e	0xfb	0x0	0x0	    0x0	    0x0
+0xfb26:	0xff	0xff	0x0	    0x0	    0x0	0x9a	0xcf	0x0
+0xfb2e:	0xff	0xff	0x0	    0x0	    0x0	0x93	0xcf	0x0
+0xfb36:	0xff	0xff	0x0	    0x0	    0x0	0x93	0xcf	0x0
+0xfb3e:	0xff	0xff	0x0	    0x0	    0x0	0x9a	0x8f	0x0
+0xfb46:	0xff	0xff	0x0	    0x0	    0x0	0x92	0x8f	0x0
+0xfb4e:	0xff	0xff	0x0	    0x0	    0x0	0xfa	0xcf	0x0
+0xfb56:	0xff	0xff	0x0	    0x0	    0x0	0xf2	0xcf	0x0
 ```
-* protected mode to user mode or user mode to protected mode
-    - the hardware will put different value into stack
-    - No mode change: push eflags, cs, and eip
-    - mode change: push user\_ss, user\_esp, eflags, cs, and eip
+x86 processors use little-endian byte ordering, meaning the least significant byte of an integer is stored at the lowest memory address.
 
-* Page Fault
-    - Hardware will push "error code" to stack
-    - https://wiki.osdev.org/Exceptions
-    - CR2 register is used to store the virtual address which caused the Page Faults.
+#### Segment Descriptor
 
-* General Protection
-    - Haredware will push "error code" to stack
-    
-### Attention
-* We can't use printf or cons_printf function which will cause General Protection Error.
-* Stack page: we should copy content to the location: stack + page_size.
+```
+|63      56|55    52|51   48|47         40|39     32|31       16|15       0|
+|Base      |Flags   |Limit  |Access Byte  |Base     |Base       |Limit     |
 
+or
+
+Bytes 0–1 : Limit[15:0]
+Bytes 2–3 : Base[15:0]
+Byte    4 : Base[23:16]
+Byte    5 : Access byte
+Byte    6 : Granularity/Flags (bits) + Limit[19:16]
+Byte    7 : Base[31:24]
+```
+Access Byte
+```
+|7      |6      5|4 |3  |2  |1  |0
+|P      |DPL     |S |E  |DC |RW |A
+```
+
+We use 0xfb26 as example: 0xfb26 is entry 1 for kernel code.
+
+Breakdown:
+
+- Limit[15:0] = 0xffff
+
+- Base[15:0] = 0x0000
+
+- Base[23:16] = 0x00
+
+- Access = 0x9a = 1001 1010b → P=1, DPL=00 (ring 0), S=1 (code/data), E=1 (code), C=0 (non-conforming), R=1 (readable), A=0
+
+- Gran/Flags = 0xcf = 1100 1111b → G=1 (4 KiB), D=1 (32-bit), L=0, AVL=0, Limit[19:16]=0xF
+
+- Base[31:24] = 0x00
+
+Computed:
+
+- Base = 0x00000000
+
+- Limit = {Limit[19:16]=0xF, Limit[15:0]=0xFFFF} with G=1 ⇒ effective limit = (0xFFFFF << 12) | 0xFFF = 4 GiB − 1
+
+- Meaning: Ring-0, 32-bit, readable code segment, base 0, flat 4 GiB. 
+
+#### we check oxfb4e content, which is user code section
+Entry at 0xfb4e → ff ff 00 00 00 fa cf 00 (User code)
+
+- Limit[15:0] = 0xffff
+
+- Base[15:0] = 0x0000
+
+- Base[23:16] = 0x00
+
+- Access = 0xFA = 1111 1010b, P=1 (present), DPL=11b → 3 (user ring), S=1 (code/data descriptor, not system), E=1 (executable → code segment), C=0 (non-conforming), R=1 (readable code), A=0 (accessed bit; CPU may set)
+
+- Flags = 0xCF = 1100 1111b, G=1 (4 KiB granularity), D=1 (default 32-bit), L=0 (not 64-bit), AVL=0, Limit[19:16]=0xF
+
+- Base[31:24] = 0x00
+
+Computed:
+
+- Base = 0x00000000
+
+- Limit (with G=1) = {0xF:0xFFFF} → 0x000F FFFF pages ⇒ effective byte limit = (0x000F_FFFF << 12) | 0xFFF = 0xFFFF FFFF (4 GiB−1)
+
+- Meaning: Ring-3, 32-bit, readable code segment, flat 0..4 GiB.
+
+### Summary
+```
+| Index | Purpose       | Bytes (low→high)          | Notes                      |
+| ----: | ------------- | ------------------------- | -------------------------- |
+|     0 | Null          | `00 00 00 00 00 00 00 00` | Must be all zeros          |
+|     1 | Kernel code   | `ff ff 00 00 00 9a cf 00` | Ring-0 code, base 0, 4 GiB |
+|     2 | Kernel data   | `ff ff 00 00 00 92 cf 00` | Ring-0 data, base 0, 4 GiB |
+|     3 | Kernel stack* | (same as data)            | Typically identical to #2  |
+...
+|     6 | Data   code   | `ff ff 00 00 00 fa cf 00` | Ring-3 code, base 0, 4 GiB |
+|     7 | Data   data   | `ff ff 00 00 00 f2 cf 00` | Ring-3 data, base 0, 4 GiB |
+|     8 | Data   stack* | (same as data)            | Typically identical to #8  |
+
+
+```
 

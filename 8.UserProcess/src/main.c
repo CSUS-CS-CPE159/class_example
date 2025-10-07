@@ -1,5 +1,5 @@
 /* 
- * main.c -- Timer Event
+ * User Process
  */
 #include "spede.h"
 #include "events.h"
@@ -52,6 +52,8 @@ int main(){
      * 7. User Data     0x38
      * 8. User Stack    0x40
      * */
+     /* each GDT entry takes 8 bytes memory.
+      */
     /* fill_descriptor(i386_descriptor *, base, limit, access, sizebits) */
     fill_descriptor(&GDT_p[9], (unsigned)&kernel_tss, sizeof(kernel_tss), TSS_PRESENT | ACC_TSS, 0x0); 
     KernelTssFlush(); 
