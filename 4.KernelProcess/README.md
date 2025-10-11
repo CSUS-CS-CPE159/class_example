@@ -4,6 +4,8 @@ We create two kernel tasks and relocate one of them to a new memory address (seg
 
 Unlike the previous example (context switching), this version also incorporates a PCB (Process Control Block) structure to represent each task.
 
+### Suggested Reading
+Computer Systems: A Programmer's Perspective: Chapter 7 Linker
 
 ### Memory layout
 ```
