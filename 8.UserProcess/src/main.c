@@ -40,6 +40,7 @@ int main(){
     kernel_tss.tss_es = 0x10;
     kernel_tss.tss_fs = 0x10;
     kernel_tss.tss_ss = 0x18;
+    kernel_tss.tss_ioopt= sizeof(kernel_tss);
     
     /* Global Descriptor Table in Spede 
      * 0. NULL
@@ -55,7 +56,7 @@ int main(){
      /* each GDT entry takes 8 bytes memory.
       */
     /* fill_descriptor(i386_descriptor *, base, limit, access, sizebits) */
-    fill_descriptor(&GDT_p[9], (unsigned)&kernel_tss, sizeof(kernel_tss), ACC_TSS, 0x0); 
+    fill_descriptor(&GDT_p[9], (unsigned)&kernel_tss, sizeof(kernel_tss)-1, ACC_TSS, 0x0); 
     KernelTssFlush(); 
 
 

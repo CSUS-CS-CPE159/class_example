@@ -9,7 +9,7 @@
 // define kernel stack space
 .text
 
-ENTRY(TimerEntry)  // push eflag, cs, eip (by hardware)
+ENTRY(TimerEntry)  // push user_ss, user_esp, eflag, cs, eip (by hardware)
     // Indicate which interrupt occured
     pushl $0x0
     pushl $0x20
@@ -40,12 +40,6 @@ ENTRY(SyscallEntry)  // push eflag, cs, eip (by hardware)
     pushl $0x80 
     // Enter into the kernel context for processing
     jmp kernel_enter
-
-// LoadKernelTSS
-ENTRY(KernelTssFlush)
-    movw $0x4B, %ax  /*loads entry 9 from GDT (Kernel TSS Descriptor, 9*8 + 3 = 0x4B*/
-    ltr %ax
-    ret
 
 /**
  * Enter the kernel context
@@ -96,5 +90,12 @@ ENTRY(ProcLoader)
     // was pushed to the stack, so adjust the stack pointer
     // before returning
     addl $8, %esp
-    iret //pop eip, cs, eflags
+    iret //pop eip, cs, eflags, user_esp, user_ss
+
+// LoadKernelTSS
+ENTRY(KernelTssFlush)
+    movw $0x48, %ax  /*loads entry 9 from GDT (Kernel TSS Descriptor, 9*8 + 3 = 0x4B*/
+    ltr %ax
+    ret
+
 

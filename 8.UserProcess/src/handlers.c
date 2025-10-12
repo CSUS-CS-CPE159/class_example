@@ -14,6 +14,14 @@ void NewUserProcHandler(void *function, void *function_end) {
     proc->trapframe = (trapframe_t *)((unsigned)&proc_kernel_stack[pid][STACK_SIZE] - sizeof(trapframe_t));
 
     trapframe_t *trapframe = proc->trapframe;
+    /*  A selector is 16 bits. 
+    15               3  2   1 0
+    +-----------------+---+---+
+    |   Index (13b)   |TI |RPL|
+    +-----------------+---+---+
+    for user mode (ring 3), RPL must be 11. 
+    */
+    trapframe->cs = 0x33;  // Entry 6 (0x30) as index + 11 = 0x33
     trapframe->ds = 0x3B;
     trapframe->gs = 0x3B;
     trapframe->fs = 0x3B;
@@ -23,7 +31,6 @@ void NewUserProcHandler(void *function, void *function_end) {
     /* User-mode stack segment points to virtual address 2 GB -sizeof (TF) */
     trapframe->user_esp = 0x80000000 - sizeof(trapframe_t);
     trapframe->eflags = get_eflags() | EF_INTR; /*enable interrupts*/
-    trapframe->cs = 0x33;
     trapframe->eip = 0x40000000; /*1 GB virtual address for text section*/
     
     trapframe->esp = (unsigned)proc_kernel_stack[pid];
