@@ -11,7 +11,7 @@ pagetable_t kpagemake(void){
     return kpgtbl;
 }
 
-size_t* setup_pagetable(trapframe_t *trapframe, void *func, size_t func_size) {
+size_t* setup_pagetable(void *func, size_t func_size) {
     /* We need five page for each process
      * page 1: page directory
      * page 2: page table for stack 
@@ -40,10 +40,6 @@ size_t* setup_pagetable(trapframe_t *trapframe, void *func, size_t func_size) {
     page_table[1023] =  (size_t)page | PAGE_PRESENT | PAGE_WRITE | PAGE_USER;
     // Allocate 0x8000 0000 to 0x8000 1000 for stack, 2GB
     page_directory[511] = ((size_t)page_table) | PAGE_PRESENT | PAGE_WRITE | PAGE_USER;
-    
-    // Copy trapframe to physical page 
-    memcpy(page+PAGE_SIZE - sizeof(trapframe_t), trapframe, sizeof(trapframe_t));
-    printf("Copy function code to a new allocated physical address: 0x%x, 0x%x\n", func, page+PAGE_SIZE - sizeof(trapframe_t)); 
 
     /* handle code page */ 
     page_table = (size_t *)kpagemake();

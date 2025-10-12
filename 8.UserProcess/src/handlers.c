@@ -28,8 +28,8 @@ void NewUserProcHandler(void *function, void *function_end) {
     trapframe->es = 0x3B;
     trapframe->user_ss =  0x43;  /*User-mode stacksegment*/
 
-    /* User-mode stack segment points to virtual address 2 GB -sizeof (TF) */
-    trapframe->user_esp = 0x80000000 - sizeof(trapframe_t);
+    /* User-mode stack segment points to virtual address 2 GB - 16*/
+    trapframe->user_esp = 0x80000000 - 16;
     trapframe->eflags = get_eflags() | EF_INTR; /*enable interrupts*/
     trapframe->eip = 0x40000000; /*1 GB virtual address for text section*/
     
@@ -37,7 +37,7 @@ void NewUserProcHandler(void *function, void *function_end) {
     trapframe->ebp = trapframe->esp;
     trapframe->eax = trapframe->esp;
     // Initialize page table
-    proc->pagetable = setup_pagetable(trapframe, function, (size_t)function_end - (size_t)function);
+    proc->pagetable = setup_pagetable(function, (size_t)function_end - (size_t)function);
 }
 void NewKernelProcHandler(void *func) {
     size_t pid = uniq_id;
