@@ -86,18 +86,20 @@ int main(){
 void context_switch(trapframe_t *current) {
     if (current->event_type == 0x80){
         SyscallHandler(); 
-    } 
-    // dismiss timer event (IRQ 0), otherwise, new event from timer won't be recognized by CPU
-    outportb(0x20, 0x60);
-    active_process->trapframe = current;
-    /* Iteratively switch user process and kernel process */
-    if (active_process == &p[0]){
-        // kernel is running
-        active_process = &p[1];
-    } else {
-        active_process = &p[0];
+        return;
+    } else{ 
+        // dismiss timer event (IRQ 0), otherwise, new event from timer won't be recognized by CPU
+        outportb(0x20, 0x60);
+        active_process->trapframe = current;
+        /* Iteratively switch user process and kernel process */
+        if (active_process == &p[0]){
+            // kernel is running
+            active_process = &p[1];
+        } else {
+            active_process = &p[0];
+        }
+        kernel_tss.tss_esp0 = (unsigned)&proc_kernel_stack[active_process->pid][STACK_SIZE];
+        set_cr3((unsigned int)active_process->pagetable);
     }
-    kernel_tss.tss_esp0 = (unsigned)&proc_kernel_stack[active_process->pid][STACK_SIZE];
-    set_cr3((unsigned int)active_process->pagetable);
     ProcLoader(active_process->trapframe);
 }

@@ -16,22 +16,6 @@ ENTRY(TimerEntry)  // push user_ss, user_esp, eflag, cs, eip (by hardware)
     // Enter into the kernel context for processing
     jmp kernel_enter
 
-//General protection
-ENTRY(GeneralProtectionFaultEntry)  // push eflag, cs, eip (by hardware)
-    // Push error code (by hardware)
-    // Save register state, interrupt number 0xC = 13
-    pushl $0x0C         
-    // Enter into the kernel context for processing
-    jmp kernel_enter
-
-// Page Fault
-ENTRY(PageFaultEntry)  // push eflag, cs, eip (by hardware)
-    // Push error code (by hardware)
-    // Save register state, interrupt number 0xD = 14
-    pushl $0x0D
-    // Enter into the kernel context for processing
-    jmp kernel_enter
-
 // System Call 
 ENTRY(SyscallEntry)  // push eflag, cs, eip (by hardware)
     //push error code (by hardware)
@@ -67,6 +51,19 @@ kernel_enter:
     cld
     // Trigger entry into the kernel
     call CNAME(context_switch)
+    addl $4, %esp
+    // Restore register state
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    popa
+    // When kernel context was entered, the interrupt number
+    // was pushed to the stack, so adjust the stack pointer
+    // before returning
+    addl $8, %esp
+    iret //pop eip, cs, eflags, user_esp, user_ss
+
 
 /**
  * Exit the kernel context
@@ -74,8 +71,8 @@ kernel_enter:
  *   - Restore register state
  *   - Return from the previous interrupt
  */
- 
-ENTRY(ProcLoader)
+.global ProcLoader 
+ProcLoader:
     // Load the stack pointer
     movl 4(%esp), %ebx
     movl %ebx, %esp
