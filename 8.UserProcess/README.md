@@ -9,15 +9,14 @@ The Global Descriptor Table (GDT) defines memory segments for code and data. The
 
 ### GDT vs IDT (Interrupt Descriptor Table)
 
+```
 | Feature	        | GDT (Global Descriptor Table)                             | IDT (Interrupt Descriptor Table)                   |
 | Primary Function	| Memory segmentation and protection.	                    | Interrupt and exception handling.                  |
 | Contents	        | Segment descriptors, TSS descriptors, call gates.	        | Gate descriptors (interrupt, trap, task).          |
 | Indexing Method	| Indexed by segment selectors.	                            | Indexed by interrupt/exception vectors (0-255).    |
 | CPU Instruction	| LGDT (Load GDT Register).	                                | LIDT (Load IDT Register).                          |
 | Purpose           | Manages system structures (TSS, TLS); required for boot.  | Crucial for responding to hardware events and errors. |
-
-
-
+```
 
 
 ### 32 bits GDT table entry
