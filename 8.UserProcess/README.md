@@ -9,33 +9,35 @@ The Global Descriptor Table (GDT) defines memory segments for code and data. The
 
 ### GDT vs IDT (Interrupt Descriptor Table)
 
-```
+
 | Feature	        | GDT (Global Descriptor Table)                             | IDT (Interrupt Descriptor Table)                   |
+|:---|:---:|---:|
 | Primary Function	| Memory segmentation and protection.	                    | Interrupt and exception handling.                  |
 | Contents	        | Segment descriptors, TSS descriptors, call gates.	        | Gate descriptors (interrupt, trap, task).          |
 | Indexing Method	| Indexed by segment selectors.	                            | Indexed by interrupt/exception vectors (0-255).    |
 | CPU Instruction	| LGDT (Load GDT Register).	                                | LIDT (Load IDT Register).                          |
 | Purpose           | Manages system structures (TSS, TLS); required for boot.  | Crucial for responding to hardware events and errors. |
-```
+
 
 
 ### 32 bits GDT table entry
 In SPEDE, the entries in the GDT are 8 bytes long and form a table like this:
-```
+
 Global Descriptor Table
 ----------------------
-Address             |   Entry       |   Content  
-GDTR offset + 0     |   NULL        |   NULL
-GDTR offset + 0x8   |   Entry 1     |   kernel Code 
-GDTR offset + 0x10  |   Entry 2     |   kernel Data
-GDTR offset + 0x18  |   Entry 3     |   kernel Stack
-GDTR offset + 0x20  |   Entry 4     |   Unknown
-GDTR offset + 0x28  |   Entry 5     |   Unknown
-GDTR offset + 0x30  |   Entry 6     |   User Code
-GDTR offset + 0x38  |   Entry 7     |   User Data
-GDTR offset + 0x40  |   Entry 8     |   user Stack
-GDTR offset + 0x48  |   Entry 9     |   kernel TSS
-```
+|Address             |   Entry       |   Content
+|:---|:---:|---:|
+|GDTR offset + 0     |   NULL        |   NULL
+|GDTR offset + 0x8   |   Entry 1     |   kernel Code 
+|GDTR offset + 0x10  |   Entry 2     |   kernel Data
+|GDTR offset + 0x18  |   Entry 3     |   kernel Stack
+|GDTR offset + 0x20  |   Entry 4     |   Unknown
+|GDTR offset + 0x28  |   Entry 5     |   Unknown
+|GDTR offset + 0x30  |   Entry 6     |   User Code
+|GDTR offset + 0x38  |   Entry 7     |   User Data
+|GDTR offset + 0x40  |   Entry 8     |   user Stack
+|GDTR offset + 0x48  |   Entry 9     |   kernel TSS
+
 How to check GDTR content
 ```
 GDB$ x/64b GDT_p
@@ -119,18 +121,14 @@ Computed:
 - Meaning: Ring-3, 32-bit, readable code segment, flat 0..4 GiB.
 
 ### Summary
-```
+
 | Index | Purpose       | Bytes (low→high)          | Notes                      |
-| ----: | ------------- | ------------------------- | -------------------------- |
+|:---|:---:|---:|---:|
 |     0 | Null          | `00 00 00 00 00 00 00 00` | Must be all zeros          |
 |     1 | Kernel code   | `ff ff 00 00 00 9a cf 00` | Ring-0 code, base 0, 4 GiB |
 |     2 | Kernel data   | `ff ff 00 00 00 92 cf 00` | Ring-0 data, base 0, 4 GiB |
 |     3 | Kernel stack* | (same as data)            | Typically identical to #2  |
-...
+|     ... |  ... | ...           | ...  |
 |     6 | Data   code   | `ff ff 00 00 00 fa cf 00` | Ring-3 code, base 0, 4 GiB |
 |     7 | Data   data   | `ff ff 00 00 00 f2 cf 00` | Ring-3 data, base 0, 4 GiB |
 |     8 | Data   stack* | (same as data)            | Typically identical to #8  |
-
-
-```
-
