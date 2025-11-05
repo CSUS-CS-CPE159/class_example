@@ -54,24 +54,18 @@ x86 processors use little-endian byte ordering, meaning the least significant by
 
 #### Segment Descriptor
 
-```
-|63      56|55    52|51   48|47         40|39     32|31       16|15       0|
-|Base      |Flags   |Limit  |Access Byte  |Base     |Base       |Limit     |
 
-or
+|Byte 7|Byte 6| Byte 5|Byte 4|Byte 3 - 2|Byte 1-0|
+|:---|:---:|---:|---:|:---:|---:|
+|63   -  56|55  -  48|47     -    40|39  -   32|31   -    16|15    -   0|
+|Base[31:24]      |Granularity/Flags (bits) + Limit[19:16]   |Limit[15:0]  |Access Byte  |Base[23:16]     |Base[15:0]       |Limit[15:0]     |
 
-Bytes 0–1 : Limit[15:0]
-Bytes 2–3 : Base[15:0]
-Byte    4 : Base[23:16]
-Byte    5 : Access byte
-Byte    6 : Granularity/Flags (bits) + Limit[19:16]
-Byte    7 : Base[31:24]
-```
 Access Byte
-```
-|7      |6      5|4 |3  |2  |1  |0
-|P      |DPL     |S |E  |DC |RW |A
-```
+
+|bit 7      |bit 6      bit 5|bit 4 |bit 3  |bit 2  |bit1  | bit 0 |
+|:---|:---:|---:|---:|:---:|---:| ---:|
+|P      |DPL     |S |E  |DC |RW |A |
+
 
 We use 0xfb26 as example: 0xfb26 is entry 1 for kernel code.
 
