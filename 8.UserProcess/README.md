@@ -71,6 +71,11 @@ We use 0xfb26 as example: 0xfb26 is entry 1 for kernel code.
 
 Breakdown:
 
+|Byte 7|Byte 6| Byte 5|Byte 4|Byte 3 - 2|Byte 1-0|
+|:---|:---:|---:|---:|:---:|---:|
+|Base[31:24]      |Granularity/Flags (bits) + Limit[19:16]   |Limit[15:0]  |Access Byte  |Base[23:16]     |Base[15:0]       |Limit[15:0]     |
+|0x00 | 0xcf | 0x9a | 0x00 | 0x00 00 | 0xFFFF |
+
 - Limit[15:0] = 0xffff
 
 - Base[15:0] = 0x0000
@@ -78,6 +83,11 @@ Breakdown:
 - Base[23:16] = 0x00
 
 - Access = 0x9a = 1001 1010b → P=1, DPL=00 (ring 0), S=1 (code/data), E=1 (code), C=0 (non-conforming), R=1 (readable), A=0
+
+|bit 7      |bit 6      bit 5|bit 4 |bit 3  |bit 2  |bit1  | bit 0 |
+|:---|:---:|---:|---:|:---:|---:| ---:|
+|P      |DPL     |S |E  |DC |RW |A |
+| 1 |  0 0 | 1 | 1 | 0| 1| 0 |  
 
 - Gran/Flags = 0xcf = 1100 1111b → G=1 (4 KiB), D=1 (32-bit), L=0, AVL=0, Limit[19:16]=0xF
 
