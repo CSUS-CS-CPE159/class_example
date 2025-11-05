@@ -1,4 +1,4 @@
-## Device Driver:"Interrupt Driven"
+## Serial Port 
 ### Goal
 The goal of this phase is to learn how a device driver that handles
 two-way communication works and to be incorporated into an OS to serve
