@@ -3,7 +3,10 @@
 * This document helps people understand user process and how to configure user mode and kernel mode.
 * reference:
     - https://wiki.osdev.org/Global_Descriptor_Table
- 
+### Single kernel stack vs Kernel Stack for each process
+https://docs.google.com/drawings/d/1qZzdBx5CEMplXS7eRqygyUI197gAqi66XVGQlpDGb-U/edit?usp=sharing
+
+
 ### what is Global Descriptor Table (GDT)
 The Global Descriptor Table (GDT) defines memory segments for code and data. The GDT is used for memory segmentation and protection, specifying properties like base address, limit, and privilege for memory segments. 
 
