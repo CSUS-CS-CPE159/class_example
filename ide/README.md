@@ -1,7 +1,6 @@
 <h3>Class practice - ide block </h3>
 
 The code is adapted from xv6. 
-The tool code is from xv6. 
 
 <p>
 add the following content to /opt/spede/bin/spede-target
