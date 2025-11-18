@@ -25,7 +25,7 @@ from the upper-half (whence IRQ events occur).
 
 The serial ports in a PC used to connect to terminals are <tt>COM2</tt>
 and <tt>COM3</tt> ports. As a port event occurs, either IRQ 3 or 4 is
-sent to the PIC. The event numbers are 35 and 36. The PIC mask must be
+sent to the PIC. The event numbers are 35 (32 + 3) and 36 ( 32 + 4). The PIC mask must be
 set to open up for them  (added to the original timer IRQ 0). The handler
 code must in the end dismiss the events (with PIC).
 
