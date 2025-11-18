@@ -55,3 +55,7 @@ apt install minicom
 ```
 spede-term com2
 ```
+
+#### reference 
+https://wiki.osdev.org/Serial_Ports
+
