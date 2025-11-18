@@ -12,7 +12,7 @@ triggered by the electronics of the port. The PC <i>IRQ</i> numbers 3 and 4
 are the designated interrupt wires that eventually evoke the OS event handler
 <i>PortHandler()</i>.
 
-Besies a hardware port there is a software <i>port_t</i> data structure
+Besides a hardware port, there is a software <i>port_t</i> data structure
 that interfaces both halves of the device driver. It buffers input and
 output with the use of semaphores to <i>flow control</i> the buffers.
 It also contains other information about the port.
