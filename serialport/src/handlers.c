@@ -138,19 +138,19 @@ void SemPostHandler(int sid){
 }
 
 void PortWriteOne(int port_num){
-    	int one;
-
-    	if( queue_is_empty(&port[port_num].write_q) && 
+   int one;
+    	
+   if( queue_is_empty(&port[port_num].write_q) && 
 	    queue_is_empty(&port[port_num].loopback_q) ){
-    		port[port_num].write_ok = 1;  // record missing write event
+        port[port_num].write_ok = 1;  // record missing write event
 		return;
-    	}
+    }
 	if( !queue_is_empty(&port[port_num].loopback_q) ){
-    		queue_out(&port[port_num].loopback_q, &one);
+        queue_out(&port[port_num].loopback_q, &one);
   	} else { 
-    		queue_out(&port[port_num].write_q, &one);
+    	queue_out(&port[port_num].write_q, &one);
 		// Freed a slot in write_q
-    		SemPostHandler(port[port_num].write_sid);
+    	SemPostHandler(port[port_num].write_sid);
   	}
 	printf("[TX p=%d ch='%c']\r\n", port_num, (char)one);
   	outportb(port[port_num].IO + DATA, (unsigned char)one);
@@ -160,16 +160,16 @@ void PortWriteOne(int port_num){
 void PortReadOne(int port_num){
   	unsigned char raw = inportb(port[port_num].IO+DATA);
  	
-        char one = (char)(raw & 0x7F);	
+    char one = (char)(raw & 0x7F);	
   	if(queue_is_full(&port[port_num].read_q) ){
-    		cons_printf("Kernel Panic: you are typing on terminal is super fast!\n");
-    		return;
+    	cons_printf("Kernel Panic: you are typing on terminal is super fast!\n");
+    	return;
   	}
   	queue_in(&port[port_num].read_q, one);
   	queue_in(&port[port_num].loopback_q, one);
 
   	if(one == '\r'){
-    		queue_in(&port[port_num].loopback_q, '\n');
+    	queue_in(&port[port_num].loopback_q, '\n');
   	}
   	SemPostHandler(port[port_num].read_sid);  
 }
@@ -177,11 +177,11 @@ void PortReadOne(int port_num){
 void PortHandler(){
 	// PORT_NUM equals 3 (COM Ports 2, 3 4)
   	for(int port_num=0; port_num<PORT_NUM; port_num++){ 
-        	if (port[port_num].owner == 0) continue;
+        if (port[port_num].owner == 0) continue;
 		unsigned char iir = inportb(port[port_num].IO+IIR);
 		if(iir == IIR_RXRDY) PortReadOne(port_num);
-		if(iir == IIR_TXRDY)PortWriteOne(port_num);
-    		if(port[port_num].write_ok != 0)PortWriteOne(port_num);
+		if(iir == IIR_TXRDY) PortWriteOne(port_num);
+    	if(port[port_num].write_ok != 0)PortWriteOne(port_num);
   	}
 	outportb(0x20, 0x63);
 	outportb(0x20, 0x64);
