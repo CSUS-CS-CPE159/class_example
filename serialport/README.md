@@ -1,4 +1,4 @@
-## Device Driver:"Interrupt Driven"
+## Serial Port 
 ### Goal
 The goal of this phase is to learn how a device driver that handles
 two-way communication works and to be incorporated into an OS to serve
@@ -12,7 +12,7 @@ triggered by the electronics of the port. The PC <i>IRQ</i> numbers 3 and 4
 are the designated interrupt wires that eventually evoke the OS event handler
 <i>PortHandler()</i>.
 
-Besies a hardware port there is a software <i>port_t</i> data structure
+Besides a hardware port, there is a software <i>port_t</i> data structure
 that interfaces both halves of the device driver. It buffers input and
 output with the use of semaphores to <i>flow control</i> the buffers.
 It also contains other information about the port.
@@ -25,7 +25,7 @@ from the upper-half (whence IRQ events occur).
 
 The serial ports in a PC used to connect to terminals are <tt>COM2</tt>
 and <tt>COM3</tt> ports. As a port event occurs, either IRQ 3 or 4 is
-sent to the PIC. The event numbers are 35 and 36. The PIC mask must be
+sent to the PIC. The event numbers are 35 (32 + 3) and 36 ( 32 + 4). The PIC mask must be
 set to open up for them  (added to the original timer IRQ 0). The handler
 code must in the end dismiss the events (with PIC).
 
@@ -54,4 +54,56 @@ apt install minicom
 #### open a new terminal before you run "spede-run -d"
 ```
 spede-term com2
+```
+
+#### reference 
+https://wiki.osdev.org/Serial_Ports
+
+
+#### Example: initialization
+```
+    // check this file for macro: /opt/spede/include/spede/machine/rs232.h
+    port[p].IO = 0x3F8      // COM1
+    // Program UART to 9600 7-E-1, enable RX/TX interrupts
+    int baud = 9600;
+    int divisor = 115200 / baud;
+
+    outportb(port[p].IO + CFCR, CFCR_DLAB);
+    outportb(port[p].IO + BAUDLO, (unsigned char)(divisor & 0xFF));
+    outportb(port[p].IO + BAUDHI, (unsigned char)((divisor >> 8) & 0xFF));
+    outportb(port[p].IO + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS);
+    //outportb(port[port_num].IO + CFCR, CFCR_8BITS);
+    outportb(port[p].IO + IER, 0x0);
+    outportb(port[p].IO + MCR, MCR_DTR | MCR_RTS | MCR_IENABLE);
+```
+
+### Receiving data
+```
+{
+...
+        unsigned char iir = inportb(port[port_num].IO+IIR);
+        if(iir == IIR_RXRDY) PortReadOne(port_num);
+...
+}
+// ---- One-byte RX path (lower half) ----
+void PortReadOne(int port_num){
+    unsigned char raw = inportb(port[port_num].IO+DATA);
+    ...
+}
+```
+
+### Sending data
+```
+{
+...
+        unsigned char iir = inportb(port[port_num].IO+IIR);
+        if(iir == IIR_TXRDY) PortWriteOne(port_num);
+...
+}
+// ---- One-byte TX path (lower half) ----
+void PortWriteOne(int port_num){
+    ...
+    // DATA = 0
+    outportb(port[port_num].IO + DATA, (unsigned char)one);
+}
 ```

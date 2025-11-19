@@ -1,26 +1,27 @@
 <h3>Class practice - ide block </h3>
 
 The code is adapted from xv6. 
-The tool code is from xv6. 
 
 <p>
-add the following content to /opt/spede/bin/spede-target
+To run this code, you should modify the execute file: /opt/spede/bin/spede-target
 
+ add the following content:
 ```
--drive file=fs.img,index=1,media=disk,format=raw\
+         -drive file=fs.img,index=1,media=disk,format=raw \
  
+```
+after 
+```
+         -drive file=${qemu_config[image]} \
 ```
 <\p>
 
 <p>
 The objective of this assigment is to practice how to
-program to use the timer interrupt events.
+program to use read a block from ide device with interrupt.
 </p>
 
-Write your own code following class lectures and this pseudo code:
-```
-test
-```
+### How to run this code
 Compile into <i>MyOS.dli</i>
 ```
 make
@@ -33,11 +34,10 @@ Run it under GDB.
 ```
 spede-run -d
 ```
-###
 
+### 
 ```
-2:01:12 $ spede
-The SPEDE Target has quit. Exiting...
+2:01:12 $ spede-run -d
 Launching SPEDE target to run in the background
 The SPEDE Target will be reset, are you sure? (y/n) y
 Resetting the SPEDE Target...
