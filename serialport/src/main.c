@@ -86,9 +86,9 @@ void Kernel(TF_t *TF_p) {       // kernel code exec (at least 100 times/second)
   
     // switch according to the event_num in the TF TF_p points to {
     switch (TF_p->event_num){
-	case TIMER_EVENT: 
-	    TimerHandler();
-	    break;
+		case TIMER_EVENT: 
+	    	TimerHandler();
+	    	break;
         case SLEEP_EVENT:
             SleepHandler(TF_p->eax);
             break;
@@ -115,7 +115,7 @@ void Kernel(TF_t *TF_p) {       // kernel code exec (at least 100 times/second)
       	    break;
     	case PORTREAD_EVENT:
       	    PortReadHandler((char *)TF_p->eax, TF_p->ebx);
-      	break;
+      		break;
     	default:
       	    cons_printf("Kernel Panic: unknown event_num %d!\n"); 
       	    breakpoint();
