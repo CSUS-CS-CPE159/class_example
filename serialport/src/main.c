@@ -92,7 +92,7 @@ void Kernel(TF_t *TF_p) {       // kernel code exec (at least 100 times/second)
         case SLEEP_EVENT:
             SleepHandler(TF_p->eax);
             break;
-	case GETPID_EVENT:
+		case GETPID_EVENT:
             GetPidHandler(); 
             break;
         case SEMALLOC_EVENT:
