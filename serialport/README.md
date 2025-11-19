@@ -59,3 +59,51 @@ spede-term com2
 #### reference 
 https://wiki.osdev.org/Serial_Ports
 
+
+#### Example: initialization
+```
+    // check this file for macro: /opt/spede/include/spede/machine/rs232.h
+    port[p].IO = 0x3F8      // COM1
+    // Program UART to 9600 7-E-1, enable RX/TX interrupts
+    int baud = 9600;
+    int divisor = 115200 / baud;
+
+    outportb(port[p].IO + CFCR, CFCR_DLAB);
+    outportb(port[p].IO + BAUDLO, (unsigned char)(divisor & 0xFF));
+    outportb(port[p].IO + BAUDHI, (unsigned char)((divisor >> 8) & 0xFF));
+    outportb(port[p].IO + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS);
+    //outportb(port[port_num].IO + CFCR, CFCR_8BITS);
+    outportb(port[p].IO + IER, 0x0);
+    outportb(port[p].IO + MCR, MCR_DTR | MCR_RTS | MCR_IENABLE);
+```
+
+### Receiving data
+```
+{
+...
+        unsigned char iir = inportb(port[port_num].IO+IIR);
+        if(iir == IIR_RXRDY) PortReadOne(port_num);
+...
+}
+// ---- One-byte RX path (lower half) ----
+void PortReadOne(int port_num){
+    unsigned char raw = inportb(port[port_num].IO+DATA);
+    ...
+}
+```
+
+### Sending data
+```
+{
+...
+        unsigned char iir = inportb(port[port_num].IO+IIR);
+        if(iir == IIR_TXRDY) PortWriteOne(port_num);
+...
+}
+// ---- One-byte TX path (lower half) ----
+void PortWriteOne(int port_num){
+    ...
+    // DATA = 0
+    outportb(port[port_num].IO + DATA, (unsigned char)one);
+}
+```
