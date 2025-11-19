@@ -47,22 +47,22 @@ void TimerHandler(void){
 
     for(i=0; i<Q_SIZE; i++){
         if((pcb[i].state == SLEEP) && (pcb[i].wake_time == current_time)){ 
-	    queue_in(&ready_q, i);           // append pid to ready_q
+	        queue_in(&ready_q, i);           // append pid to ready_q
       	    pcb[i].state = READY;       // update proc state 
-	    ch_p[40] = 0xf00;
- 	    ch_p[43] = 0xf00;
-	    ch_p[i*80+40] = 0xf00 + i + '0';
- 	    ch_p[i*80+43] = 0xf00 +'r';
+	        ch_p[40] = 0xf00;
+ 	        ch_p[43] = 0xf00;
+	        ch_p[i*80+40] = 0xf00 + i + '0';
+ 	        ch_p[i*80+43] = 0xf00 +'r';
     	}   
     }
   
     if(pcb[current_pid].cpu_time == TIME_LIMIT){ // if its cpu_time reaches the preset OS time limit
-   	pcb[current_pid].state = READY; // update/downgrade its state
+   	    pcb[current_pid].state = READY; // update/downgrade its state
     	queue_in(&ready_q, current_pid);   // move it to ready_q
     	ch_p[40] = 0xf00;
- 	ch_p[43] = 0xf00;
-	ch_p[current_pid*80+40] = 0xf00 + current_pid + '0';
-	ch_p[current_pid*80+43] = 0xf00 +'r';
+ 	    ch_p[43] = 0xf00;
+	    ch_p[current_pid*80+40] = 0xf00 + current_pid + '0';
+	    ch_p[current_pid*80+43] = 0xf00 +'r';
     	current_pid = 0;              // no longer runs
     } 
     outportb(0x20, 0x60);           // Don't forget: notify PIC event-handling done
@@ -111,8 +111,6 @@ void SemWaitHandler(int sid){
     ch_p[43] = 0xf00;
     ch_p[current_pid*80+40] = 0xf00 + current_pid + '0';
     ch_p[current_pid*80+43] = 0xf00 +'W';
-    	
-
     current_pid = 0;
   }
 }
@@ -127,13 +125,11 @@ void SemPostHandler(int sid){
     queue_out(&sem[sid].wait_q, &free_pid);
     queue_in(&ready_q, free_pid);
     pcb[free_pid].state = READY;
-
-  ch_p[40] = 0xf00;
-  ch_p[43] = 0xf00;
-  ch_p[free_pid*80+40] = 0xf00 + free_pid + '0';
-  ch_p[free_pid*80+43] = 0xf00 +'r';
-    	
-
+ 
+    ch_p[40] = 0xf00;
+    ch_p[43] = 0xf00;
+    ch_p[free_pid*80+40] = 0xf00 + free_pid + '0';
+    ch_p[free_pid*80+43] = 0xf00 +'r';
   }
 }
 
@@ -168,7 +164,7 @@ void PortReadOne(int port_num){
   	queue_in(&port[port_num].read_q, one);
   	queue_in(&port[port_num].loopback_q, one);
 
-  	if(one == '\r'){
+  	if(one == '\r' || one == '\n'){
     	queue_in(&port[port_num].loopback_q, '\n');
   	}
   	SemPostHandler(port[port_num].read_sid);  
@@ -194,12 +190,12 @@ void PortAllocHandler(int *eax){
 
 	int p;
   	for(p = 0; p< PORT_NUM; p++){
-    		if(port[p].owner == 0) break;
+        if(port[p].owner == 0) break;
   	}
 
   	if(p == PORT_NUM){
-    		cons_printf("Kernel Panic: no port left!\n");
-    		return;
+    	cons_printf("Kernel Panic: no port left!\n");
+    	return;
   	}
 
 	*eax = p;
@@ -230,20 +226,20 @@ void PortAllocHandler(int *eax){
 // ---- Buffer one char for TX (upper -> lower) ----
 void PortWriteHandler(char one, int port_num){
   	if(queue_is_full(&port[port_num].write_q)) {
-    		cons_printf("Kernel Panic: terminal is not prompting (fast enough)?\n");
-    		return;
+        cons_printf("Kernel Panic: terminal is not prompting (fast enough)?\n");
+    	return;
   	}
   	queue_in(&port[port_num].write_q, one);
 	if(port[port_num].write_ok != 0)
 	{
-	    	PortWriteOne(port_num);
+	    PortWriteOne(port_num);
   	}
 }
 
 void PortReadHandler(char *one, int port_num){
   	if(queue_is_empty(&port[port_num].read_q)){
-    		cons_printf("Kernel Panic: nothing in typing/read buffer?\n");
-    		return;
+    	cons_printf("Kernel Panic: nothing in typing/read buffer?\n");
+    	return;
   	}
 	int ch;
   	queue_out(&port[port_num].read_q, &ch);

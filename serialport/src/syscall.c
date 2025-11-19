@@ -86,7 +86,7 @@ void PortRead(char *p, int port_num) {
     for (;;) {
         SemWait(port[port_num].read_sid);
         
-	asm volatile(
+	    asm volatile(
             "int %0"
             :
             : "i"(PORTREAD_EVENT), "a"(p), "b"(port_num)
