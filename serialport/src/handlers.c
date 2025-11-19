@@ -213,14 +213,14 @@ void PortAllocHandler(int *eax){
 	// Program UART to 9600 7-E-1, enable RX/TX interrupts
   	int baud = 9600;
   	int divisor = 115200 / baud;
-  
-  	outportb(port[p].IO + CFCR, CFCR_DLAB);
-  	outportb(port[p].IO + BAUDLO, (unsigned char)(divisor & 0xFF));
+    	
+	outportb(port[p].IO + IER, 0x0);  // Disable all interrupts
+  	outportb(port[p].IO + CFCR, CFCR_DLAB);		// Enable DLAB (set baud rate divisor)
+  	outportb(port[p].IO + BAUDLO, (unsigned char)(divisor & 0xFF)); // set divisor
   	outportb(port[p].IO + BAUDHI, (unsigned char)((divisor >> 8) & 0xFF));
-	outportb(port[p].IO + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS);
+	outportb(port[p].IO + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS); // 7 bits, Even Parity, and 1 stop bit
 	//outportb(port[port_num].IO + CFCR, CFCR_8BITS);
-  	outportb(port[p].IO + IER, 0x0);
-  	outportb(port[p].IO + MCR, MCR_DTR | MCR_RTS | MCR_IENABLE);
+  	outportb(port[p].IO + MCR, MCR_DTR | MCR_RTS | MCR_IENABLE);  // IRQs enabled, RTS/DSR set
   	// small delay for hardware settle	
 	for (int i = 0; i<= 0x63; ++i) asm volatile("inb $0x80");
 
