@@ -25,7 +25,7 @@ void Scheduler(){                 // choose a PID as current_pid to load/run
     if(current_pid != 0) return;    // if continue below, find one for current_pid
 
     if (queue_is_empty(&ready_q)){         // if ready_q.size is 0 {
-	cons_printf("Kernel Panic: no process to run!\n"); // big problem!
+		cons_printf("Kernel Panic: no process to run!\n"); // big problem!
     	breakpoint();                 // alternative
     }
     queue_out(&ready_q, &current_pid);    // get next ready-to-run process as current_pid
