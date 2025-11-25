@@ -1,5 +1,7 @@
 <h3>Class practice - ide block </h3>
 
+You should read the [Chapter 40](https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf)
+ before you check the code. 
 The code is adapted from xv6. 
 
 <p>
