@@ -1,5 +1,5 @@
 /* 
- * events.S -- Timer Event
+ * events.S -- IDE Event
  */
 
 #include <spede/machine/asmacros.h> 
