@@ -90,7 +90,7 @@ int main(){
 
     unsigned short buf[512];
     memset(buf, 0, sizeof(buf));
-	// Read the first block from ide device 1, and put this block into buffer
+	// Read the first block (Super Block) from ide device 1, and put this block into buffer
     struct buf * b = bread(1, 1);
     printf("%d\n", b->dev);
     b = bread(1, 2);
