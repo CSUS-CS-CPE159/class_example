@@ -1,13 +1,15 @@
 <h3>Class practice - ide block </h3>
 
-You should read the [Chapter 40](https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf)
- before you check the code. 
+You should read the following chapter to help you understand the base code:
+* [Chapter 36: I/O devices](https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf) 36.8 Case Study: A Simple IDE Disk Driver
+* [Chapter 40: file system implementation](https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf)
+
 The code is adapted from xv6. 
 
 <p>
 To run this code, you should modify the execute file: /opt/spede/bin/spede-target
 
- add the following content:
+ add the following content into file:
 ```
          -drive file=fs.img,index=1,media=disk,format=raw \
  
@@ -22,6 +24,8 @@ after
 The objective of this assigment is to practice how to
 program to use read a block from ide device with interrupt.
 </p>
+
+### Note: Once you add previous content into your spede-target file. When you run 'spede-target' command, make sure you have "fs.img" file in your current folder. If you are not working on the file system, just create a empty 'fs.img' file. 
 
 ### How to run this code
 Compile into <i>MyOS.dli</i>
