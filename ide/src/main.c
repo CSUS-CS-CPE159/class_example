@@ -77,18 +77,20 @@ void cat(){
 extern void IdeEntry();
 
 int main(){
-    //Initialize PIC, we need to reconfigure pic device
+    // Initialize PIC, we need to reconfigure pic device
     picinit();
-    //Initialize Interrupt
+    // Initialize Interrupt
     interrupts_init();
+	// Initialize the buffer cache
     binit();
+	// Initialize the IDE device
     ideinit();
     // Enable interrupts
     interrupts_enable();
 
     unsigned short buf[512];
     memset(buf, 0, sizeof(buf));
-
+	// Read the first block from ide device 1, and put this block into buffer
     struct buf * b = bread(1, 1);
     printf("%d\n", b->dev);
     b = bread(1, 2);
