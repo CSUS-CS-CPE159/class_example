@@ -27,6 +27,9 @@ program to use read a block from ide device with interrupt.
 
 ### Note: Once you add previous content into your spede-target file. When you run 'spede-target' command, make sure you have "fs.img" file in your current folder. If you are not working on the file system, just create a empty 'fs.img' file. 
 
+### How to make a "fs.img"
+You can modify and run tool/mkfs.c to generate your fs.img.
+
 ### How to run this code
 Compile into <i>MyOS.dli</i>
 ```
