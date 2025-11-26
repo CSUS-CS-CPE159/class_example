@@ -91,6 +91,7 @@ idestart(struct buf *b)
   outb(IDE_LBA_LOW, sector & 0xff);
   outb(IDE_LBA_MID, (sector >> 8) & 0xff);
   outb(IDE_LBA_HIGH, (sector >> 16) & 0xff);
+  // (0xe0 bits 5, 6, 7), the target drive (bit 4, driver 0 or 1), and part of the sector address ((sector>>24)&0x0f) bits 0-3).
   outb(IDE_DRIVE_HEAD, 0xe0 | ((b->dev&1)<<4) | ((sector>>24)&0x0f));
   if(b->flags & B_DIRTY){
     outb(IDE_COMMAND, IDE_CMD_WRITE);
