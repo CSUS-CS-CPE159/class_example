@@ -163,7 +163,7 @@ void PortReadOne(int port_num){
   	}
   	queue_in(&port[port_num].read_q, one);
   	queue_in(&port[port_num].loopback_q, one);
-
+	
   	if(one == '\r' || one == '\n'){
     	queue_in(&port[port_num].loopback_q, '\n');
   	}

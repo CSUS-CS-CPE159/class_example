@@ -1,9 +1,14 @@
 ## Serial Port 
+### Device drivers Background
+
+Many device drives execute code in two contexts: a <i>top half</i> that runs in a process's kernel thread, and a <i>bottom half</i> that executes at interrupt time. The top half is called via system calls such as read and write that want the device to perform I/O. This code may ask the hardware to start an operation (e.g., ask the disk to read a block); then the code wait for the operation to complete. Eventually, the device completes the operation and raises an interrupt. The driver's interrupt handler, acting as the bottom half, figures out what operation has completed, wakes up a waiting process if appropriate, and tells the hardware to start work on any waiting next operation [1]. 
+
 ### Goal
 The goal of this phase is to learn how a device driver that handles
 two-way communication works and to be incorporated into an OS to serve
 processes to interact with users at peripherals such as <tt>terminal</tt>
 devices (TTY, teletype)</tt>.
+
 
 The test will be done by a terminal process that is to send and receive
 text data via a serial data port. This is usually called the <i>upper-half</i>
@@ -56,10 +61,6 @@ apt install minicom
 spede-term com2
 ```
 
-#### reference 
-https://wiki.osdev.org/Serial_Ports
-
-
 #### Example: initialization
 ```
     // check this file for macro: /opt/spede/include/spede/machine/rs232.h
@@ -107,3 +108,8 @@ void PortWriteOne(int port_num){
     outportb(port[port_num].IO + DATA, (unsigned char)one);
 }
 ```
+
+
+### Reference
+[1]. Cox, R., Kaashoek, F., & Morris, R. (2020). xv6: a simple, Unix-like teaching operating system. MIT PDOS.
+[2] https://wiki.osdev.org/Serial_Ports
