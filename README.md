@@ -1,4 +1,4 @@
 
-# This is the class example only used for CSC/CPE 159 and CSC 239 student in California State University, Sacramento. 
+# This is the class example only used for CSC/CPE 159 in California State University, Sacramento. 
 
 # The code is runnable only in SPEDE environment.   
