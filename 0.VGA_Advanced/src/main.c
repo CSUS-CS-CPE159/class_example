@@ -1,5 +1,6 @@
 /* 
  * main.c -- Reprogramming VGA font 
+ * VGA has over 300 register! 
  */
 #include "io.h"
 
