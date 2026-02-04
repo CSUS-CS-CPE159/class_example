@@ -22,4 +22,5 @@ spede-run -d
 ```
 
 #### Reference
-https://wiki.osdev.org/VGA_Hardware#:~:text=to%20be%20written.-,Memory%20Layout%20in%20text%20modes,requires%20changes%20in%20addressing%20logic.
+
+https://wiki.osdev.org/VGA_Hardware
