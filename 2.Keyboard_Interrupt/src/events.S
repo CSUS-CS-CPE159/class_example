@@ -9,7 +9,7 @@ ENTRY(KeyboardEntry)  // push eflag, cs, eip (by hardware)
   pusha  // push all: eax, ebx, edx, ecx
          //           esp, ebp, esi, edi
   cld  // clear direction flag
-  call CNAME(keyboard_interrupt_handler)  // call C function TimerHandler()
+  call CNAME(keyboard_interrupt_handler)  // call C function keyboard_interrupt_handler()
   popa  // pop all: eax, ebx, edx, ecx
         //           esp, ebp, esi, edi
   iret  // pop eip, cs, eflags
