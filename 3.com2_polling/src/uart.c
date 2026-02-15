@@ -1,4 +1,6 @@
-#include "spede.h"
+#include <spede/flames.h> // IO_DELAY(), breakpoint(), cons_putchar(), cons_getchar(), cons_kbhit(),
+#include <spede/machine/io.h> // inportb(), outportb(), inportw(), etc.
+#include "spede/machine/rs232.h"
 
 // COM2, COM3, COM4 address: {0x2f8, 0x3e8, 0x2e8};
 int port = 0x2f8;
@@ -8,17 +10,10 @@ void uart_init() {
 	// Program UART to 9600 7-E-1, enable RX/TX interrupts
   	int baud = 9600;
   	int divisor = 115200 / baud;
-    	
-	outportb(port + IER, 0x0);  // Disable all interrupts
   	outportb(port + CFCR, CFCR_DLAB);		// Enable DLAB (set baud rate divisor)
   	outportb(port + BAUDLO, (unsigned char)(divisor & 0xFF)); // set divisor
   	outportb(port + BAUDHI, (unsigned char)((divisor >> 8) & 0xFF));
 	outportb(port + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS); // 7 bits, Even Parity, and 1 stop bit
-  	outportb(port + MCR, MCR_DTR | MCR_RTS );  // IRQs enabled, RTS/DSR set
-  	// small delay for hardware settle	
-	for (int i = 0; i<= 0x63; ++i) asm volatile("inb $0x80");
-    // Re-enable interrupts (Recieved data & transmitter holding register empty)
-  	outportb(port + IER, 0x03);
 }
 
 unsigned int uart_isWriteByteReady() { 
@@ -28,7 +23,7 @@ unsigned int uart_isWriteByteReady() {
     return iir & 0x20;
 }
 
-void uart_writeByteBlockingActual(unsigned char ch) {
+void uart_writeByte(unsigned char ch) {
     while (!uart_isWriteByteReady()){
     }
   	outportb(port + DATA, (unsigned char)ch);
@@ -36,8 +31,8 @@ void uart_writeByteBlockingActual(unsigned char ch) {
 
 void uart_writeText(char *buffer) {
     while (*buffer) {
-       if (*buffer == '\n') uart_writeByteBlockingActual('\r');
-       uart_writeByteBlockingActual(*buffer++);
+       if (*buffer == '\n') uart_writeByte('\r');
+       uart_writeByte(*buffer++);
     }
 }
 

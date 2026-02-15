@@ -5,5 +5,5 @@
 void uart_init();
 void uart_writeText(char *buffer);
 unsigned char uart_readByte();
-void uart_writeByteBlockingActual(unsigned char);
+void uart_writeByte(unsigned char);
 #endif
