@@ -1,4 +1,4 @@
-<h3>Assignment - Timer Event</h3>
+<h3>Timer Event</h3>
 
 <p>
 The objective of this example is to practice how to
@@ -29,3 +29,10 @@ spede-run -d
 <li>The output location is at the center of the screen on the target PC.
 <li>After the full name is shown, it then erases it and restart.
 </ol>
+
+### Spede also provide some useful I/O functions
+```
+cons_putchar() // print one character on the target display
+cons_printf()  // print one sentence on the target display
+cons_kbhit()   // poll keyboard input, returns 1 if pressed
+```
