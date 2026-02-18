@@ -2,7 +2,7 @@
 
 <p>
 The objective of this example is to practice how to
-program to use the timer interrupt events. Check more details: [click me](https://github.com/CSUS-CS-CPE159/class_example/blob/main/TimerEvent/TimerInterrupt.pdf)
+program to use the timer interrupt events. Check more details: <a href="https://github.com/CSUS-CS-CPE159/class_example/blob/main/TimerEvent/TimerInterrupt.pdf" target="_blank">Click here</a> 
 </p>
 
 Write your own code following class lectures and this pseudo code:
