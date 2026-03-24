@@ -31,7 +31,7 @@ void NewUserProcHandler(void *function, void *function_end) {
     /* User-mode stack segment points to virtual address 2 GB - 16*/
     trapframe->user_esp = 0x80000000 - 16;
     trapframe->eflags = get_eflags() | EF_INTR; /*enable interrupts*/
-    trapframe->eip = 0x40000000; /*1 GB virtual address for text section*/
+    trapframe->eip = 0x80000080; /*1 GB virtual address for text section*/
     
     trapframe->esp = (unsigned)proc_kernel_stack[pid];
     trapframe->ebp = trapframe->esp;
@@ -58,8 +58,8 @@ void NewKernelProcHandler(void *func) {
 
 
 int ksyscall_printf(char *str){
-    cons_printf(str);
-    printf(str);
+    //cons_printf(str);
+    //printf(str);
     return 0;
 }
 
@@ -86,6 +86,7 @@ void SyscallHandler(void){
     switch(syscall) {
         case SYSCALL_PRINT:
             rc = ksyscall_printf((char *)arg1);
+            
             break;
         default:
             cons_printf("Invalid system call %d\n", syscall);

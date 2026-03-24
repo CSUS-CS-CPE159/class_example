@@ -10,7 +10,7 @@
 #     Can be overridden via an environment variable, such as:
 #        OS_NAME=SpedeOS make
 #------------------------------------------------------------------------------
-OS_NAME ?= MyOS
+OS_NAME ?= User
 
 #------------------------------------------------------------------------------
 # (2) Specify additional compiler or linker flags.
@@ -73,16 +73,8 @@ LDFLAGS += -g $(EXTRA_LDFLAGS)
 
 src_to_bin_dir = $(patsubst $(SRC_DIR)%,$(BUILD_DIR)%,$1)
 
-# Convert raw binary files into object files
-BINARIES := $(wildcard src/*.bin)
-BIN_OBJS := $(patsubst src/%.bin, $(BUILD_DIR)/%.o, $(BINARIES))
-$(BUILD_DIR)/%.o: src/%.bin
-	@mkdir -p $(@D)
-	@$(OBJ_COPY) -I binary -O elf32-i386 -B i386 $< $@
-
 sources  = $(wildcard src/*/*.c) $(wildcard src/*.c) $(wildcard src/*.S)
-objects  = $(BIN_OBJS)
-objects += $(call src_to_bin_dir,$(addsuffix .o,$(basename $(sources))))
+objects  = $(call src_to_bin_dir,$(addsuffix .o,$(basename $(sources))))
 depends  = $(patsubst %.o,%.d,$(objects))
 
 #------------------------------------------------------------------------------
@@ -94,7 +86,7 @@ all: $(DLI)
 $(OS_NAME): $(DLI)
 
 $(DLI): $(objects)
-	@$(CMD_LINKER) $(LDFLAGS) -o $(BUILD_DIR)/$(DLI) $(objects)
+	@$(CMD_LINKER) $(LDFLAGS) -us -o $(BUILD_DIR)/$(DLI) $(objects)
 
 clean:
 	@echo "Removing compiled objects and images"

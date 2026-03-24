@@ -47,7 +47,7 @@ size_t* setup_pagetable(void *func, size_t func_size) {
     
     page_table[0] =  (size_t)page | PAGE_PRESENT | PAGE_WRITE |PAGE_USER;
     // Allocate 0x4000 0000 to 0x4000 1000 for code section, 1GB
-    page_directory[256] = ((size_t)page_table) | PAGE_PRESENT | PAGE_WRITE |PAGE_USER;
+    page_directory[512] = ((size_t)page_table) | PAGE_PRESENT | PAGE_WRITE |PAGE_USER;
     
     // Copy code to physical page 
     memcpy(page, func, func_size);
