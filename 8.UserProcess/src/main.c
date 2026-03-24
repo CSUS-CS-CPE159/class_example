@@ -19,8 +19,8 @@ char page_address[50][PAGE_SIZE];
 // Current running process
 proc_t *active_process = NULL; 
 unsigned int kernel_cr3;
-extern unsigned char _binary_src_User_bin_start[];
-extern unsigned char _binary_src_User_bin_end[];
+extern unsigned char _binary_src_user_bin_start[];
+extern unsigned char _binary_src_user_bin_end[];
 
 int main(){
     struct pseudo_descriptor pseudo_desc;  /*used to get base addr of GDT*/
@@ -75,7 +75,7 @@ int main(){
     /* Create a kernel process*/
     NewKernelProcHandler(SystemProc);
     /* Create a user process*/
-    NewUserProcHandler(_binary_src_User_bin_start, _binary_src_User_bin_end);
+    NewUserProcHandler(_binary_src_user_bin_start, _binary_src_user_bin_end);
     
     active_process = &p[0];
     kernel_tss.tss_esp0 = (unsigned)&proc_kernel_stack[0][STACK_SIZE];

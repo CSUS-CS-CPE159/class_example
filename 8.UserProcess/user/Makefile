@@ -10,7 +10,7 @@
 #     Can be overridden via an environment variable, such as:
 #        OS_NAME=SpedeOS make
 #------------------------------------------------------------------------------
-OS_NAME ?= User
+OS_NAME ?= user
 
 #------------------------------------------------------------------------------
 # (2) Specify additional compiler or linker flags.
@@ -28,7 +28,7 @@ EXTRA_CFLAGS = -Wall \
 			   -Wunused-but-set-parameter \
 			   -fdelete-null-pointer-checks
 
-EXTRA_LDFLAGS = 
+EXTRA_LDFLAGS =
 
 #==============================================================================
 # Do not modify below
@@ -41,7 +41,7 @@ EXTRA_LDFLAGS =
 SPEDE_ROOT ?= /opt/spede
 
 # DLI filename
-DLI = $(OS_NAME).dli
+DLI = $(OS_NAME).bin
 
 # Global paths
 BUILD_DIR=build
@@ -61,6 +61,7 @@ OBJ_DUMP  := $(SPEDE_ROOT)/bin/i386-elf-objdump
 
 # Build utilities
 CMD_LINKER = $(SPEDE_ROOT)/bin/linkdli
+
 CMD_DELETE = rm -rf
 
 # Files to be removed when a 'clean' is performed

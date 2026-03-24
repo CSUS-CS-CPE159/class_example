@@ -3,7 +3,12 @@ typedef enum {
      SYSCALL_PRINT,
 }syscall_t;
 
-char str[] = "This is the first process\n";
+void Process();
+void sys_printf(char *str);
+
+void main(){
+    Process();
+}
 
 /* We need to define a syscall function at user space and copy this code to user page.
  * We write this code to manually call a software interrupt. Therefore, we need to use 
@@ -22,14 +27,10 @@ void sys_printf(char *str){
 }
 
 void Process(void){
+    char str[] = "This is the first process\n";
     while (1){
         sys_printf(str);
         for(int i = 0; i < 16660000; i++)
             asm("inb $0x80");
     }
 }
-
-void main(){
-    Process();
-}
-
