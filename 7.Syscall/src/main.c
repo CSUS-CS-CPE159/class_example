@@ -24,7 +24,7 @@ int main(){
     fill_gate(&IDT_p[128], (int)SyscallEntry, get_cs(), ACC_INTR_GATE, 0);
     
     NewKernelProcHandler(SystemProc, 0);
-    NewKernelProcHandler(SystemProc1, (size_t)SystemProc1_code_end - (size_t)SystemProc1);
+    NewKernelProcHandler(UserProc, (size_t)UserProc_code_end - (size_t)UserProc);
     
     active_process = &p[0];
     kernel_context_exit(active_process->trapframe);    

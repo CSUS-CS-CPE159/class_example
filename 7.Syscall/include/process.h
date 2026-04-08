@@ -5,6 +5,6 @@
 #define __PROCESS_H__
 
 extern void SystemProc(void);
-extern void SystemProc1(void);
-extern void SystemProc1_code_end(void);
+extern void UserProc(void);
+extern void UserProc_code_end(void);
 #endif

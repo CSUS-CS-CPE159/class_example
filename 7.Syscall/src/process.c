@@ -16,7 +16,7 @@ void SystemProc(void){
 
 void sys_printf(char *);
 
-void SystemProc1(void){
+void UserProc(void){
     while (1){
         sys_printf("This is the first process\n");
         for(uint32_t i = 0; i < 16660000; i++)
@@ -39,5 +39,5 @@ void sys_printf(char *str){
         /* Register used in the operation so the compiler can optimize/save/restore*/
         : "%eax", "%ebx");     
 }
-__asm__(".global SystemProc1_code_end\n"
-        "SystemProc1_code_end:");
+__asm__(".global UserProc_code_end\n"
+        "UserProc_code_end:");
