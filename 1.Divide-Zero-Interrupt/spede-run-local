@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+
+spede_root=${SPEDE_ROOT:-/opt/spede}
+
+declare -A run_defaults
+run_defaults=(
+    [auto]=0
+    [debug]=0
+    [image]="build/MyOS.dli"
+    [socket]="${SPEDE_SOCKET:-./spede.sock}"
+    [localrc]="./local.gdbinit"
+    [spederc]="${spede_root}/etc/spede.gdbinit"
+    [qmp]="${spede_root}/bin/qemu-qmp"
+    [dl]="${spede_root}/bin/dl"
+    [fs]="${spede_root}/bin/flash-sup"
+    [gdb]="${spede_root}/bin/i386-elf-gdb"
+    [gdb_helpers]="${spede_root}/lib/gdb_helpers.py"
+)
+
+declare -A run_config
+for i in ${!run_defaults[*]}; do
+    run_config[${i}]=${run_defaults[${i}]}
+done
+
+function usage() {
+    self=$(basename $0)
+    echo "Usage: ${self} [options] <image>"
+    echo ""
+    echo "Options:"
+    echo " -s | --socket     Specifies the control socket location for the"
+    echo "                   SPEDE target"
+    echo ""
+    echo " -d | --debug      Debug with GDB"
+    echo ""
+    echo " -a | --auto       Automatically proceed with any confirmation prompts"
+    echo ""
+}
+
+function check_deps() {
+    jq=$(which jq)
+    if [[ $? -ne 0 || ! -x ${jq} ]]; then
+        echo "Error: jq is not installed or not executable"
+        return 1
+    fi
+
+    qmp=$(which ${run_config[qmp]})
+    if [[ $? -ne 0 || ! -x ${qmp} ]]; then
+        echo "Error: QEMU QMP is not installed or is not executable"
+        return 1
+    fi
+
+    dl=$(which ${run_config[dl]})
+    if [[ $? -ne 0 || ! -x ${dl} ]]; then
+        echo "Error: SPEDE Tools are not installed or are not executable"
+        return 1
+    fi
+
+    fs=$(which ${run_config[fs]})
+    if [[ $? -ne 0 || ! -x ${fs} ]]; then
+        echo "Error: SPEDE Tools are not installed or are not executable"
+        return 1
+    fi
+
+    if [ ! -x ${run_config[gdb]} ]; then
+        echo "Error: GDB ('${run_config[gdb]}') is not installed or not executable"
+        return 1
+    fi
+}
+
+function main() {
+    image=${1:-${run_config[image]}}
+    if [ ! -f ${image} ]; then
+        # Attempt to detect OS name / Image name from the Makefile
+
+        if [ -f "Makefile" ]; then
+            osname=$(cat Makefile |grep "^\s*OS_NAME" |awk -F"[?=:]+" '{ gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2 }' | head -n 1)
+
+            if [ -n "${osname}" ]; then
+                image="build/${osname}.dli"
+            fi
+        fi
+
+        if [ ! -f ${image} ]; then
+            echo "Image '${image}' cannot be found"
+            return 1
+        fi
+    fi
+
+
+    cmd_spederc=
+    cmd_localrc=
+    cmd_gdb_helpers=
+    cmd_auto=
+
+    if [ -f ${run_config[spederc]} ]; then
+        cmd_spederc="-command=${run_config[spederc]}"
+    fi
+
+    if [ -f ${run_config[localrc]} ]; then
+        cmd_localrc="-command=${run_config[localrc]}"
+    fi
+
+    if [ ${run_config[auto]} -ne 0 ]; then
+        cmd_auto="-ex continue"
+    fi
+
+
+
+    echo "Launching GDB..."
+    ${run_config[gdb]} -q \
+        -ex "target remote localhost:1234" \
+        ${cmd_spederc} \
+        ${cmd_localrc} \
+        ${cmd_gdb_helpers} \
+        ${cmd_auto} \
+        -nx -readnow \
+        ${image}
+}
+
+function __qemu_exec() {
+    json=$(${run_config[qmp]} --socket ${run_config[socket]} $1 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    echo ${json}
+    return 0
+}
+
+function spede_target_tty() {
+    json=$(__qemu_exec query-chardev)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    output=$(echo "${json}" | jq -r '.return[] | select(.label == "com1").filename' 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    tty=$(echo ${output} | cut -d : -f 2-)
+    if [ -c ${tty} ]; then
+        echo ${tty}
+        return 0
+    fi
+
+    return 1
+}
+
+function spede_target_status() {
+    json=$(__qemu_exec query-status)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    output=$(echo "${json}" | jq -r '.return.status')
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    echo ${output}
+    return 0
+}
+
+main $@
+exit $?
