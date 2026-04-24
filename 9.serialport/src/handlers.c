@@ -103,11 +103,11 @@ void PortWriteOne(int port_num){
     if( queue_is_empty(&port[port_num].write_q) && 
 	    queue_is_empty(&port[port_num].loopback_q) ){
         port[port_num].write_ok = 1;  // record missing write event
-		return;
+	return;
     }
-	if( !queue_is_empty(&port[port_num].loopback_q) ){
+    if( !queue_is_empty(&port[port_num].loopback_q) ){
         queue_out(&port[port_num].loopback_q, &one);
-  	} else { 
+    } else { 
     	queue_out(&port[port_num].write_q, &one);
      	printf("[TX p=%d ch='%c']\n", port_num, (char)one);
         // Freed a slot in write_q
@@ -140,64 +140,65 @@ void PortHandler(){
 	// PORT_NUM equals (COM Ports 2, 3)
   	for(int port_num=0; port_num<PORT_NUM; port_num++){ 
         if (port[port_num].owner == 0) continue;
-		unsigned char iir = inportb(port[port_num].IO+IIR);
-		if(iir == IIR_RXRDY) PortReadOne(port_num);
-		if(iir == IIR_TXRDY) PortWriteOne(port_num);
+    
+   	    unsigned char iir = inportb(port[port_num].IO+IIR);
+        if(iir == IIR_RXRDY) PortReadOne(port_num);
+        if(iir == IIR_TXRDY) PortWriteOne(port_num);
     	if(port[port_num].write_ok != 0)PortWriteOne(port_num);
   	}
 	outportb(0x20, 0x20);
 }
 
 void PortAllocHandler(int *eax){
-	// COM2, COM3, COM4
-  	static int IO[PORT_NUM] = {0x2f8, 0x3e8, 0x2e8};
+    // COM2, COM3, COM4
+    static int IO[PORT_NUM] = {0x2f8, 0x3e8, 0x2e8};
 
-	int p;
-  	for(p = 0; p< PORT_NUM; p++){
-        if(port[p].owner == 0) break;
-  	}
+    int p;
+    for(p = 0; p< PORT_NUM; p++){
+   	if(port[p].owner == 0) break;
+    }
 
-  	if(p == PORT_NUM){
+    if(p == PORT_NUM){
     	cons_printf("Kernel Panic: no port left!\n");
     	return;
-  	}
+    }
 
-	*eax = p;
+    *eax = p;
  
-	memset((char *)&port[p], 0, sizeof(port_t));
-  	port[p].owner = current_pid;
-  	port[p].IO = IO[p];
-	// Primed for first TX
-  	port[p].write_ok = 1;
-	
-	// Program UART to 9600 7-E-1, enable RX/TX interrupts
-  	int baud = 9600;
-  	int divisor = 115200 / baud;
-    	
-	outportb(port[p].IO + IER, 0x0);  // Disable all interrupts
-  	outportb(port[p].IO + CFCR, CFCR_DLAB);		// Enable DLAB (set baud rate divisor)
-  	outportb(port[p].IO + BAUDLO, (unsigned char)(divisor & 0xFF)); // set divisor
-  	outportb(port[p].IO + BAUDHI, (unsigned char)((divisor >> 8) & 0xFF));
-	outportb(port[p].IO + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS); // 7 bits, Even Parity, and 1 stop bit
-	//outportb(port[port_num].IO + CFCR, CFCR_8BITS);
-  	outportb(port[p].IO + MCR, MCR_DTR | MCR_RTS | MCR_IENABLE);  // IRQs enabled, RTS/DSR set
-  	// small delay for hardware settle	
-	for (int i = 0; i<= 0x63; ++i) asm volatile("inb $0x80");
+    memset((char *)&port[p], 0, sizeof(port_t));
+    port[p].owner = current_pid;
+    port[p].IO = IO[p];
+    // Primed for first TX
+    port[p].write_ok = 1;
 
-  	outportb(port[p].IO+IER, IER_ERXRDY | IER_ETXRDY);
+    // Program UART to 9600 7-E-1, enable RX/TX interrupts
+    int baud = 9600;
+    int divisor = 115200 / baud;
+    	
+    outportb(port[p].IO + IER, 0x0);  // Disable all interrupts
+    outportb(port[p].IO + CFCR, CFCR_DLAB);		// Enable DLAB (set baud rate divisor)
+    outportb(port[p].IO + BAUDLO, (unsigned char)(divisor & 0xFF)); // set divisor
+    outportb(port[p].IO + BAUDHI, (unsigned char)((divisor >> 8) & 0xFF));
+    outportb(port[p].IO + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS); // 7 bits, Even Parity, and 1 stop bit
+    //outportb(port[port_num].IO + CFCR, CFCR_8BITS);
+    outportb(port[p].IO + MCR, MCR_DTR | MCR_RTS | MCR_IENABLE);  // IRQs enabled, RTS/DSR set
+    // small delay for hardware settle	
+    for (int i = 0; i<= 0x63; ++i) asm volatile("inb $0x80");
+  
+    outportb(port[p].IO+IER, IER_ERXRDY | IER_ETXRDY);
 }
 
 // ---- Buffer one char for TX (upper -> lower) ----
 void PortWriteHandler(char one, int port_num){
-  	if(queue_is_full(&port[port_num].write_q)) {
+    if(queue_is_full(&port[port_num].write_q)) {
         cons_printf("Kernel Panic: terminal is not prompting (fast enough)?\n");
     	return;
-  	}
-  	queue_in(&port[port_num].write_q, one);
-	if(port[port_num].write_ok != 0)
-	{
-	    PortWriteOne(port_num);
-  	}
+    }
+    queue_in(&port[port_num].write_q, one);
+    if(port[port_num].write_ok != 0)
+    {
+        PortWriteOne(port_num);
+    }
 }
 
 void PortReadHandler(char *one, int port_num){

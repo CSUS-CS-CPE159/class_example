@@ -1,4 +1,9 @@
-// services.c, 159
+/**
+ * CPE/CSC 159 - Operating System Pragmatics
+ * California State University, Sacramento
+ *
+ * user library
+ */
 #include "spede.h"
 #include "events.h"
 #include "data.h"

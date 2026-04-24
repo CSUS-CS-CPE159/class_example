@@ -59,16 +59,15 @@ typedef struct {
   q_t wait_q;     // blocked pids
 } sem_t;
 
-
-typedef struct{
-  int owner,
-      IO,
-      write_sid,
-      read_sid,
-      write_ok;
-      q_t write_q;
-      q_t read_q;
-      q_t loopback_q;
+typedef struct {
+    int owner,	      // the serial port owner
+        IO,	      // the serial port's base address
+        write_sid,    // Semaphore for flow control when sending messages
+        read_sid,     // Semaphore to block readers until data is available in read_q
+        write_ok;     // sending is currently allowed
+    q_t write_q;      // Queue of data to be transmitted through the serial port
+    q_t read_q;       // Queue of data received from the serial port
+    q_t loopback_q;   // Queue for echoing received data back to the host
 } port_t;
 
 #endif // __TYPES_H__
