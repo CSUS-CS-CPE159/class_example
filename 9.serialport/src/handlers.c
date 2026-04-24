@@ -1,4 +1,9 @@
-// handlers.c, 159
+/**
+ * CPE/CSC 159 - Operating System Pragmatics
+ * California State University, Sacramento
+ *
+ * handlers.c
+ */
 
 #include "spede.h"
 #include "types.h"
@@ -7,136 +12,95 @@
 #include "proc.h"
 #include "queue.h"
 
-// to create process, alloc PID, PCB, and stack space
-// build TF into stack, set PCB, register PID to ready_q
+/* to create process, alloc PID, PCB, and stack space
+ * build TF into stack, set PCB, register PID to ready_q
+ * */
 void NewProcHandler(func_ptr_t p){  // arg: where process code starts
-  int pid; 
+    int pid; 
 
-  if((queue_is_empty(&free_q))){           // this may occur for testing 
-    cons_printf("Kernel Panic: no more PID left!\n");
-    breakpoint();                   // breakpoint() into GDB
-    return;
-  }
-  queue_out(&free_q, &pid);               // get 'pid' from free_q
-  printf("pid is %d\n", pid);
-  memset((char *)&pcb[pid], 0, sizeof(pcb_t));
-  memset((char *)&proc_stack[pid], 0, PROC_STACK_SIZE); // use tool to clear the PCB (indexed by 'pid')
-  pcb[pid].state = READY; 
-  queue_in(&ready_q, pid);
+    if((queue_is_empty(&free_q))){           // this may occur for testing 
+        cons_printf("Kernel Panic: no more PID left!\n");
+        breakpoint();                   // breakpoint() into GDB
+        return;
+    }
+    queue_out(&free_q, &pid);               // get 'pid' from free_q
+    printf("pid is %d\n", pid);
+    // Initialize PCB
+    memset((char *)&pcb[pid], 0, sizeof(pcb_t));
+    memset((char *)&proc_stack[pid], 0, PROC_STACK_SIZE); // use tool to clear the PCB (indexed by 'pid')
+    // Initialize trapframe 
+    pcb[pid].TF_p = (TF_t *)&proc_stack[pid][PROC_STACK_SIZE - sizeof(TF_t)]; // point TF_p to highest area in stack
+    // then fill out the eip of the TF
+    pcb[pid].TF_p->eip = (unsigned int)p; // new process code
+    pcb[pid].TF_p->eflags = EF_DEFAULT_VALUE|EF_INTR; // EFL will enable intr!
+    pcb[pid].TF_p->cs = get_cs();         // duplicate from current CPU register
+    pcb[pid].TF_p->ds = get_ds();         // duplicate from current CPU register
+    pcb[pid].TF_p->es = get_es();         // duplicate from current CPU register
+    pcb[pid].TF_p->fs = get_fs();         // duplicate from current CPU register
+    pcb[pid].TF_p->gs = get_gs();         // duplicate from current CPU register
 
-  pcb[pid].TF_p = (TF_t *)&proc_stack[pid][PROC_STACK_SIZE - sizeof(TF_t)]; // point TF_p to highest area in stack
-  // then fill out the eip of the TF
-  pcb[pid].TF_p->eip = (unsigned int)p; // new process code
-  pcb[pid].TF_p->eflags = EF_DEFAULT_VALUE|EF_INTR; // EFL will enable intr!
-  pcb[pid].TF_p->cs = get_cs();         // duplicate from current CPU
-  pcb[pid].TF_p->ds = get_ds();         // duplicate from current CPU
-  pcb[pid].TF_p->es = get_es();         // duplicate from current CPU
-  pcb[pid].TF_p->fs = get_fs();         // duplicate from current CPU
-  pcb[pid].TF_p->gs = get_gs();         // duplicate from current CPU
-}
-
-void GetPidHandler(void){
-  pcb[current_pid].TF_p->eax = (unsigned int) current_pid;
+    pcb[pid].state = READY; 
+    queue_in(&ready_q, pid);
 }
 
 // count cpu_time of running process and preempt it if reaching limit
 void TimerHandler(void){
-    int i;
     pcb[current_pid].cpu_time++;    // upcount cpu_time of the process (PID is current_pid)
     current_time++;
 
-    for(i=0; i<Q_SIZE; i++){
-        if((pcb[i].state == SLEEP) && (pcb[i].wake_time == current_time)){ 
-	        queue_in(&ready_q, i);           // append pid to ready_q
-      	    pcb[i].state = READY;       // update proc state 
-	        ch_p[40] = 0xf00;
- 	        ch_p[43] = 0xf00;
-	        ch_p[i*80+40] = 0xf00 + i + '0';
- 	        ch_p[i*80+43] = 0xf00 +'r';
-    	}   
-    }
-  
     if(pcb[current_pid].cpu_time == TIME_LIMIT){ // if its cpu_time reaches the preset OS time limit
    	    pcb[current_pid].state = READY; // update/downgrade its state
     	queue_in(&ready_q, current_pid);   // move it to ready_q
-    	ch_p[40] = 0xf00;
- 	    ch_p[43] = 0xf00;
-	    ch_p[current_pid*80+40] = 0xf00 + current_pid + '0';
-	    ch_p[current_pid*80+43] = 0xf00 +'r';
     	current_pid = 0;              // no longer runs
     } 
-    outportb(0x20, 0x60);           // Don't forget: notify PIC event-handling done
-}
-
-void SleepHandler(int sleep_amount){
-  pcb[current_pid].wake_time = current_time + (100 * sleep_amount); // calc future wake time in pcb
-  pcb[current_pid].state = SLEEP; // update proc state
-
-  ch_p[40] = 0xf00;
-  ch_p[43] = 0xf00;
-  ch_p[current_pid*80+40] = 0xf00 + current_pid + '0';
-  ch_p[current_pid*80+43] = 0xf00 +'S';
-    	
-  current_pid = 0;                // reset current_pid
+    outportb(0x20, 0x20);           // Don't forget: notify PIC event-handling done
 }
 
 void SemAllocHandler(int passes){
-  int sid;
+    int sid;
 
-  for(sid = 0; sid < Q_SIZE; sid++){
-    if(sem[sid].owner == 0) break; 
-  }
-  if(sid == Q_SIZE){
-    cons_printf("Kernel panic: no more semaphores left!\n");
-    return; 
-  }
+    for(sid = 0; sid < Q_SIZE; sid++){
+        if(sem[sid].owner == 0) break; 
+    }
+    if(sid == Q_SIZE){
+        cons_printf("Kernel panic: no more semaphores left!\n");
+        return; 
+    }
 
-  memset((char *)&sem[sid], 0, sizeof(sem_t));
+    memset((char *)&sem[sid], 0, sizeof(sem_t));
   
-  sem[sid].passes = passes;
-  sem[sid].owner = current_pid;
-  pcb[current_pid].TF_p->eax = sid; 
+    sem[sid].passes = passes;
+    sem[sid].owner = current_pid;
+    pcb[current_pid].TF_p->eax = sid; 
 }
 
 void SemWaitHandler(int sid){
 
-  if(sem[sid].passes > 0){
-    sem[sid].passes--;
-    return; 
-  } else{ 
-    queue_in(&sem[sid].wait_q, current_pid);
-    pcb[current_pid].state = WAIT;
-	    
-    ch_p[40] = 0xf00;
-    ch_p[43] = 0xf00;
-    ch_p[current_pid*80+40] = 0xf00 + current_pid + '0';
-    ch_p[current_pid*80+43] = 0xf00 +'W';
-    current_pid = 0;
-  }
+    if(sem[sid].passes > 0){
+        sem[sid].passes--;
+    } else{ 
+        queue_in(&sem[sid].wait_q, current_pid);
+        pcb[current_pid].state = WAIT;
+        current_pid = 0;
+    }
 }
 
 void SemPostHandler(int sid){
-  int free_pid = 0;
+    int free_pid = 0;
 
-  if((sem[sid].wait_q.size == 0)){
-    sem[sid].passes++;
-    return;
-  } else{
-    queue_out(&sem[sid].wait_q, &free_pid);
-    queue_in(&ready_q, free_pid);
-    pcb[free_pid].state = READY;
- 
-    ch_p[40] = 0xf00;
-    ch_p[43] = 0xf00;
-    ch_p[free_pid*80+40] = 0xf00 + free_pid + '0';
-    ch_p[free_pid*80+43] = 0xf00 +'r';
-  }
+    if((sem[sid].wait_q.size == 0)){
+        sem[sid].passes++;
+    } else{
+        queue_out(&sem[sid].wait_q, &free_pid);
+        queue_in(&ready_q, free_pid);
+        pcb[free_pid].state = READY;
+    }
 }
 
 void PortWriteOne(int port_num){
-   int one;
+    int one;
     	
-   if( queue_is_empty(&port[port_num].write_q) && 
+    if( queue_is_empty(&port[port_num].write_q) && 
 	    queue_is_empty(&port[port_num].loopback_q) ){
         port[port_num].write_ok = 1;  // record missing write event
 		return;
@@ -145,10 +109,10 @@ void PortWriteOne(int port_num){
         queue_out(&port[port_num].loopback_q, &one);
   	} else { 
     	queue_out(&port[port_num].write_q, &one);
-		// Freed a slot in write_q
+     	printf("[TX p=%d ch='%c']\n", port_num, (char)one);
+        // Freed a slot in write_q
     	SemPostHandler(port[port_num].write_sid);
   	}
-	printf("[TX p=%d ch='%c']\r\n", port_num, (char)one);
   	outportb(port[port_num].IO + DATA, (unsigned char)one);
 }
 
@@ -161,17 +125,19 @@ void PortReadOne(int port_num){
     	cons_printf("Kernel Panic: you are typing on terminal is super fast!\n");
     	return;
   	}
+	printf("[RX p=%d ch='%c', '0x%x']\n", port_num, (char)one, one);
+    
   	queue_in(&port[port_num].read_q, one);
   	queue_in(&port[port_num].loopback_q, one);
-	
-  	if(one == '\r' || one == '\n'){
-    	queue_in(&port[port_num].loopback_q, '\n');
+  	
+    if(one == '\r' || one == '\n'){
+     	queue_in(&port[port_num].loopback_q, '\n');
   	}
   	SemPostHandler(port[port_num].read_sid);  
 }
 
 void PortHandler(){
-	// PORT_NUM equals 3 (COM Ports 2, 3 4)
+	// PORT_NUM equals (COM Ports 2, 3)
   	for(int port_num=0; port_num<PORT_NUM; port_num++){ 
         if (port[port_num].owner == 0) continue;
 		unsigned char iir = inportb(port[port_num].IO+IIR);
@@ -179,9 +145,7 @@ void PortHandler(){
 		if(iir == IIR_TXRDY) PortWriteOne(port_num);
     	if(port[port_num].write_ok != 0)PortWriteOne(port_num);
   	}
-	outportb(0x20, 0x63);
-	outportb(0x20, 0x64);
-
+	outportb(0x20, 0x20);
 }
 
 void PortAllocHandler(int *eax){

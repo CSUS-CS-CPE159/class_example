@@ -1,4 +1,4 @@
-// Device Driver: "Interrupt Driven"
+// Device Driver: "Serials Port with Interrupt Driven"
 
 #include "spede.h"    // given SPEDE stuff
 #include "types.h"    // data types
@@ -8,12 +8,13 @@
 #include "queue.h"    // queue function
 
 // kernel's own data:
-int current_pid, current_time, vehicle_sid;       	// current selected PID; if 0, none selected
-q_t ready_q, free_q;    				// processes ready to run and not used
-pcb_t pcb[PROC_NUM];    				// process control blocks
+int current_pid, current_time;       	// current selected PID; if 0, none selected
+q_t ready_q, free_q;    				            // processes ready to run and not used
+                                                    //
+pcb_t pcb[PROC_NUM];    			            	// process control blocks
 char proc_stack[PROC_NUM][PROC_STACK_SIZE];       	// process runtime stacks
+                                                    //
 struct i386_gate *IDT_p;
-unsigned short *ch_p = (unsigned short*)0xB8000;  	// init ch_p pointer to vga
 sem_t sem[Q_SIZE];
 port_t port[PORT_NUM];
 
@@ -31,10 +32,6 @@ void Scheduler(){                 // choose a PID as current_pid to load/run
     queue_out(&ready_q, &current_pid);    // get next ready-to-run process as current_pid
     pcb[current_pid].state = RUN;   // update proc state
     pcb[current_pid].cpu_time = 0;  // reset proc cpu_time count 
-    ch_p[40] = 0xf00;
-    ch_p[43] = 0xf00;
-    ch_p[current_pid*80+40] = 0xf00 + current_pid + '0';
-    ch_p[current_pid*80+43] = 0xf00 + 'R'; 
 } 
 
 // OS bootstrap from main() which is process 0, so we do not use this PID
@@ -47,8 +44,7 @@ int main() {
     memset((char *)&port, 0, (sizeof(port_t))*PORT_NUM);
   
     current_time = 0;       // init current time 
-    vehicle_sid = -1;       // vehicle proc running
-
+    
     // queue free_q with pid 1~19
     for(i=1; i<PROC_NUM; i++){
     	queue_in(&free_q, i);
@@ -61,8 +57,6 @@ int main() {
     IDT_p = get_idt_base();   // init IDT_p (locate IDT location)
     cons_printf("IDT located @ DRAM addr %x (%d).\n", IDT_p, IDT_p); // show location on Target PC
     IDTEntrySet(TIMER_EVENT, TimerEvent);
-    IDTEntrySet(GETPID_EVENT, GetPidEvent);
-    IDTEntrySet(SLEEP_EVENT, SleepEvent);
     IDTEntrySet(SEMALLOC_EVENT, SemAllocEvent);
     IDTEntrySet(SEMWAIT_EVENT, SemWaitEvent);
     IDTEntrySet(SEMPOST_EVENT, SemPostEvent);
@@ -77,7 +71,7 @@ int main() {
     NewProcHandler(Init);     // call NewProcHandler(Init) to create Init proc
     NewProcHandler(TermProc); // call NewProcHandler(Init) to create Init proc
     Scheduler();              // call scheduler to select current_pid (if needed)
-    Loader(pcb[current_pid].TF_p); // call Loader with the TF address of current_pid
+    KernelExit(pcb[current_pid].TF_p); // call Loader with the TF address of current_pid
     return 0;                 // compiler needs for syntax altho this statement is never exec
 } 
 
@@ -89,12 +83,7 @@ void Kernel(TF_t *TF_p) {       // kernel code exec (at least 100 times/second)
 		case TIMER_EVENT: 
 	    	TimerHandler();
 	    	break;
-        case SLEEP_EVENT:
-            SleepHandler(TF_p->eax);
-            break;
-		case GETPID_EVENT:
-            GetPidHandler(); 
-            break;
+
         case SEMALLOC_EVENT:
             SemAllocHandler(TF_p->eax);
             break;
@@ -104,7 +93,8 @@ void Kernel(TF_t *TF_p) {       // kernel code exec (at least 100 times/second)
     	case SEMPOST_EVENT:
             SemPostHandler(TF_p->eax);
       	    break;
-    	case PORT_EVENT:
+
+        case PORT_EVENT:
       	    PortHandler();
       	    break;
     	case PORTALLOC_EVENT:
@@ -121,5 +111,5 @@ void Kernel(TF_t *TF_p) {       // kernel code exec (at least 100 times/second)
       	    breakpoint();
     }
     Scheduler();                    // call scheduler to select current_pid (if needed)
-    Loader(pcb[current_pid].TF_p);  // call Loader with the TF address of current_pid
+    KernelExit(pcb[current_pid].TF_p);  // call Loader with the TF address of current_pid
 } 

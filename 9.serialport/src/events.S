@@ -1,4 +1,9 @@
-// events.S, initial handling sequence of an event, build TF mainly
+/**
+ * CPE/CSC 159 - Operating System Pragmatics
+ * California State University, Sacramento
+ *
+ * events.S, initial handling sequence of an event, build TF mainly
+ */
 
 #include <spede/machine/asmacros.h> // do not use/include "spede.h"
 #include "events.h"                 // for K_DATA, K_STACK_SIZE below
@@ -9,30 +14,9 @@
 .comm k_stack, K_STACK_SIZE, 1      // declare kernel stack space (global)
 .text
 
-// loads the trapframe of the selected process in order to run it
-ENTRY(Loader)
-   // copy what's above stack pointer to eax
-	movl 4(%esp), %eax
-	movl %eax, %esp
-	popl %gs
-	popl %fs
-	popl %es
-	popl %ds
-	popa
-	add $4, %esp	// skip 4 bytes (event_num)
-	iret // interrupt return (pop eip, cs, eflags)
-
 // push event_num then go into kernel
 ENTRY(TimerEvent)           // push eflags, cs, eip (by circuit)
 	pushl $TIMER_EVENT   // push event_num
-	jmp kernel_enter 
-
-ENTRY(GetPidEvent)
-	pushl $GETPID_EVENT
-	jmp kernel_enter 
-
-ENTRY(SleepEvent)
-	pushl $SLEEP_EVENT
 	jmp kernel_enter 
 
 ENTRY(SemAllocEvent)
@@ -75,3 +59,16 @@ kernel_enter:
   leal k_stack + K_STACK_SIZE, %esp // point esp to kernel stack
   pushl %ecx      // push ecx (TF addr) there
   call CNAME(Kernel)                // call Kernel code
+
+// loads the trapframe of the selected process in order to run it
+ENTRY(KernelExit)
+   // copy what's above stack pointer to eax
+	movl 4(%esp), %eax
+	movl %eax, %esp
+	popl %gs
+	popl %fs
+	popl %es
+	popl %ds
+	popa
+	add $4, %esp	// skip 4 bytes (event_num)
+	iret // interrupt return (pop eip, cs, eflags)

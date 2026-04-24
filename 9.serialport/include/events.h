@@ -8,9 +8,6 @@
 #define K_DATA 		0x10    // kernel data segment # (register)
 #define K_STACK_SIZE 	16384  	// kernel runtime stack byte size
 #define TIMER_EVENT  	0x20    // IDT entry #32, aka IRQ0, for timer device
-// events for kernel services (phase2)
-#define GETPID_EVENT 	0x64   	// IDT entry #100, for get pid event
-#define SLEEP_EVENT     0x65    // IDT entry #101, for sleep event
 // events for semaphores (phase3)
 #define SEMALLOC_EVENT 	0x66 	// IDT entry #102, for sem alloc event
 #define SEMWAIT_EVENT 	0x67  	// IDT entry #103, for sem wait event
@@ -30,7 +27,7 @@
 #include "types.h"          // for 'TF_t' below
 
 extern void TimerEvent(void);// coded in events.S, assembler won't like this syntax
-extern void Loader(TF_t *);  // coded in events.S
+extern void KernelExit(TF_t *);  // coded in events.S
 extern void GetPidEvent();	 // coded in events.S, code for Kernel Services
 extern void SleepEvent();		 // coded in events.S, code for Kernel Services
 extern void SemAllocEvent(); // coded in events.S, code for Semaphores 

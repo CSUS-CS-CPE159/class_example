@@ -3,26 +3,6 @@
 #include "events.h"
 #include "data.h"
 
-int GetPid(void){             // function receives no arguments, but return an integer
-    int pid;
-    asm volatile(
-	"int %1"
-	: "=a"(pid)
-	: "i" (GETPID_EVENT)
-	: "cc", "memory"
-	);
-    return pid;
-}
-
-void Sleep(int sleep_amount){ // function receives arguments, return an integer
-    asm volatile(
-	"int %0"
-	:
-	: "i"(SLEEP_EVENT), "a"(sleep_amount)
-	: "cc", "memory"
-	);
-}
-
 int SemAlloc(int passes){
     int sid;
     asm volatile(
@@ -60,7 +40,6 @@ int PortAlloc(void){
     : "i"(PORTALLOC_EVENT)
     : "cc", "memory"
     );
-    Sleep(1);
     port[port_num].write_sid = SemAlloc(QUEUE_SIZE);
     port[port_num].read_sid = SemAlloc(0);
     port[port_num].read_q.size = 0;

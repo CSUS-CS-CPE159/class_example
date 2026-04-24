@@ -1,7 +1,12 @@
-// proc.c, 159
-// all processes are coded here
-// processes do not use kernel space (data.h) or code (handlers, tools, etc.)
-// all must be done thru system service calls
+/**
+ * CPE/CSC 159 - Operating System Pragmatics
+ * California State University, Sacramento
+ *
+ * proc.c
+ * all processes are coded here
+ * processes do not use kernel space (data.h) or code (handlers, tools, etc.)
+ * all must be done thru system service calls
+ */
 
 #include "spede.h"      // cons_xxx below needs
 #include "syscall.h"
@@ -44,11 +49,11 @@ void TermProc(void){
 	// init port device and port_t data associated
 	int my_port = PortAlloc();    
   	while(1){
-    	PortWrite("Now enter (username): ", my_port);
+    	PortWrite("Now enter (username): \r\n", my_port);
     	PortRead(str_read, my_port);
     	cons_printf("Read from port #%d: %s\n", my_port, str_read);
 
-		PortWrite("Now enter (password): ", my_port);
+		PortWrite("Now enter (password): \r\n", my_port);
     	PortRead(str_read, my_port);
     	cons_printf("Read from port #%d: %s\n", my_port, str_read);
     	PortWrite("Hello, Team MyOS here! \r\n", my_port); // \r also!
