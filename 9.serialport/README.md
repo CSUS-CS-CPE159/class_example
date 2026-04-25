@@ -49,6 +49,8 @@ have no more character to send. So the handler code must save the information
 of this port condition in a flag in order to start sending as new transmission
 is requested by a process.
 
+![alt text](https://github.com/CSUS-CS-CPE159/class_example/blob/main/9.serialport/SerialPort.jpg?raw=true)
+
 #### How to Run Code
 
 ##### install minicom
