@@ -1,4 +1,4 @@
-<h3>Class practice - ide block </h3>
+<h3>Class practice - Decoding On-disk file system </h3>
 
 You should read the following chapter to help you understand the base code:
 * [Chapter 36: I/O devices](https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf) 36.8 Case Study: A Simple IDE Disk Driver
