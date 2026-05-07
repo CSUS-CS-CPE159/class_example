@@ -143,10 +143,10 @@ main(int argc, char *argv[])
     de.inum = xshort(inum);
     strncpy(de.name, name, DIRSIZ);
     iappend(rootino, &de, sizeof(de));
-    printf("file name %s\n", name);
-    while((cc = read(fd, buf, sizeof(buf))) > 0)
+    while((cc = read(fd, buf, sizeof(buf))) > 0){
       iappend(inum, buf, cc);
-
+    }
+    printf("file name %s, inode number is %d\n", name, inum);
     close(fd);
   }
 

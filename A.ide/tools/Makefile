@@ -5,4 +5,4 @@ clean:
 	rm fs.img mkfs
 
 fs:
-	./mkfs fs.img bashrc README
+	./mkfs fs.img README.md bashrc shell.bin

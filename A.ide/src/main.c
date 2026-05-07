@@ -54,21 +54,21 @@ void ls(void){
                 printf("ls: cannot stat %s\n", de.name);
                 continue;
         }
-        cons_printf("%d\t %d\t %s\t\t%d\n", st.type, st.size, de.name, st.ino);
+        cons_printf("type:%d\t, size: %d\t name: %s\t inode:\t%d\n", st.type, st.size, de.name, st.ino);
         iput(f1->ip);
     }
-    cat();
+    cat(2);
     while(1){};
 }
 
-void cat(){
+void cat(int inode){
     char buf[512];
     struct file *f= filealloc();
     f->type = FD_INODE;
     f->off = 0;
     f->readable = 1;
     f->writable = 1;
-    f->ip = iget(1, 2);
+    f->ip = iget(1, inode);
     while(fileread(f, (char*)buf, sizeof(buf)) == sizeof(buf)){
         printf("%s\n", buf);
     }
@@ -93,9 +93,12 @@ int main(){
 	// Read the first block (Super Block) from ide device 1, and put this block into buffer
     struct buf * b = bread(1, 1);
     printf("%d\n", b->dev);
+    // Read the second block, this is inode block
     b = bread(1, 2);
+    // Read the third block, this is bitmap block
     b = bread(1, 29);
     b = bread(1, 0x2c);
+    // verify virtual file system
     struct superblock sb;
     readsb(1, &sb);
     ls();

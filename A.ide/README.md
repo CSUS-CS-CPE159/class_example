@@ -44,7 +44,19 @@ Run it under GDB.
 spede-run -d
 ```
 
-### 
+###  This example show how to read README file's content
+```
+make fs
+./mkfs fs.img bashrc README shell.bin
+nmeta 29 (boot, super, inode blocks 26, bitmap blocks 1) blocks 941 log 30 total 1000
+file name README, inode number is 2
+file name bashrc, inode number is 3
+file name shell.bin, inode number is 4
+balloc: first 77 blocks have been allocated
+balloc: write bitmap block at sector 28
+```
+We know README's inode number is 2
+
 ```
 2:01:12 $ spede-run -d
 Launching SPEDE target to run in the background
@@ -99,8 +111,6 @@ $6 = {
 }
 SPEDE GDB$ print &b->data
 $7 = (uchar (*)[512]) 0x107fd0 <bcache+560>
-SPEDE GDB$ printf "root directory\n"
-root directory
 SPEDE GDB$ print *(struct dinode*)(0x107fd0 + 0x40)
 $12 = {
   type = 0x1,
@@ -113,8 +123,6 @@ $12 = {
   size = 0x200,
   addrs = {0x1d, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 }
-SPEDE GDB$ printf "root directory\n"
-root directory
 SPEDE GDB$ print *(struct dinode*)(0x107fd0 + 0x40*2)
 $14 = {
   type = 0x2,
@@ -139,8 +147,6 @@ $16 = {
   size = 0x5050,
   addrs = {0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c}
 }
-SPEDE GDB$ printf "cat command, size is 0x5050, the data block is 0x5050/512 = 41\n"
-
 SPEDE GDB$ n
 139	    b = bread(1, 0x2c);
 SPEDE GDB$ n
