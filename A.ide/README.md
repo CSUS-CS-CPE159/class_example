@@ -2,6 +2,7 @@
 
 You should read the following chapter to help you understand the base code:
 * [Chapter 36: I/O devices](https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf) 36.8 Case Study: A Simple IDE Disk Driver
+* [Chapter 39: files and directories](https://pages.cs.wisc.edu/~remzi/OSTEP/file-intro.pdf)
 * [Chapter 40: file system implementation](https://pages.cs.wisc.edu/~remzi/OSTEP/file-implementation.pdf)
 
 The code is adapted from xv6. 
