@@ -1,19 +1,88 @@
-# Compile into <i>MyOS.dli</i>
-```
+# Keyboard Input - Interrupt-Driven Method
+
+## Overview
+This example demonstrates interrupt-driven keyboard input. Rather than polling the keyboard continuously (wasting CPU time), the keyboard hardware signals an interrupt when a key is pressed. The CPU then runs an interrupt handler to process the key.
+
+## Learning Objectives
+- Understand hardware interrupts for I/O devices
+- Learn about interrupt masks and PIC (Programmable Interrupt Controller)
+- See how to write interrupt handlers for hardware devices
+- Compare interrupt-driven vs. polling-based input
+- Understand interrupt priorities and masking
+- Practice mixing assembly and C code for interrupt handling
+
+## Build and Run
+
+Compile:
+```bash
 make
 ```
-Start the target window, and you can see the file spede.sock in current folder:
-```
+
+Start the target simulator (separate terminal):
+```bash
 spede-target
 ```
-Run it under GDB.
-```
+
+Run with debugging:
+```bash
 spede-run -d
 ```
 
-type any key to test the code.
+Type any key to test the code.
 
-## tracing stack register (esp) content
+## How It Works
+
+### Hardware Interrupt Flow
+When you press a key:
+1. Keyboard controller generates an interrupt signal
+2. Interrupt signal sent to PIC (Programmable Interrupt Controller)
+3. PIC signals CPU (if interrupts enabled)
+4. CPU finishes current instruction
+5. CPU jumps to interrupt handler (from IDT)
+6. Handler processes the keystroke
+7. CPU continues previous work
+
+### Interrupt Descriptor Table (IDT)
+Like exceptions, keyboard interrupts use the IDT:
+- **Keyboard interrupt**: IRQ 1 (Interrupt 33 in IDT, since IRQ 1 maps to vector 32+1)
+- **IDT[KEYBOARD_EVENT]**: Points to our keyboard handler
+
+### Programmable Interrupt Controller (PIC)
+The 8259 PIC is a chip that:
+- Accepts interrupt signals from multiple devices
+- Prioritizes them
+- Signals the CPU
+
+**Key registers** (addressed as I/O ports):
+- **Port 0x21**: PIC data port (mask register)
+  - Bit 0: Timer interrupt
+  - Bit 1: Keyboard interrupt
+  - Bit i: Device i (1 = masked/disabled, 0 = enabled)
+
+### Interrupt Masking
+To enable the keyboard interrupt:
+```c
+outportb(0x21, ~0x02);  // Mask = 11111101 (enable bit 1 for keyboard)
+```
+
+The `~0x02` pattern:
+- 0x02 = 00000010 (keyboard IRQ 1)
+- ~0x02 = 11111101 (all bits set except bit 1)
+- Writing to PIC: 1 = masked (disabled), 0 = unmasked (enabled)
+
+### Enabling CPU Interrupts
+After registering handlers and configuring PIC:
+```asm
+sti  ; Set Interrupt Flag (enable CPU interrupts)
+```
+
+This allows the CPU to respond to interrupts.
+
+## Stack Frame During Interrupt
+
+Here's a trace of the stack register (esp) content during interrupt handling:
+
+## Tracing stack register (esp) content
 ```
 spede@spedevm:~/Desktop/class_example/2.Keyboard_Interrupt$ spede-run -d
 The SPEDE Target will be reset, are you sure? (y/n) y
