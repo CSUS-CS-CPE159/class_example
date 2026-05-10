@@ -50,26 +50,26 @@ After studying this example you should be able to:
 ## Architecture Overview
 
 ```
- ┌─────────────────────────────────────────────┐
- │              User Processes                  │
- │  TermProc: PortWrite() ─────┐   PortRead() ◄─────┐
- │                             │   (blocks on        │
- │  Init:  cons_kbhit loop     │    read_sid)        │
- └─────────────────────────────┼─────────────────────┼──┘
-                               │  system calls       │
- ┌─────────────────────────────▼─────────────────────┼──┐
- │                       Kernel                       │  │
- │                                                    │  │
- │  Semaphores        port[].write_q                  │  │
- │   write_sid ────► (TX buffer) ─► PortWriteOne() ──┤  │
- │   (starts=N)                      │ UART TX        │  │
- │                                   │                │  │
- │   read_sid  ◄─── port[].read_q ◄─ PortReadOne() ◄─┘  │
- │   (starts=0)     (RX buffer)      UART RX IRQ         │
- │                                                        │
- │  port[].loopback_q ──────────────► PortWriteOne()     │
- │  (echo received chars back to terminal)               │
- └────────────────────────────────────────────────────────┘
+ ┌────────────────────────────────────────────────────────┐
+ │              User Processes                            │
+ │  TermProc: PortWrite() ─────┐   PortRead() ◄─          │
+ │                             │   (blocks on read_sid)   │
+ │  Init:  cons_kbhit loop     │     ▲                    │
+ └─────────────────────────────┼─────┼────────────────────┘
+                 system calls  │     │
+ ┌─────────────────────────────┼─────┼──────────────────────┐              ┌────────────────┐            
+ │              Kernel         │     │                      │              │                │
+ │                             │     │                      │              │   spede-term   │
+ │  Semaphores                 ▼     │                      │              │   (minicom)    │
+ │   write_sid ────► port[].write_q  ──► PortWriteOne()  ───┼─── UART TX ──┼                │
+ │   (starts=N)      (TX buffer)     │    UART TX IRQ       │              │                │
+ │                                   │                      │              │                │
+ │   read_sid  ◄────────  port[].read_q ◄─── PortReadOne()◄─┼─── UART RX ──┼                │
+ │   (starts=0)     (RX buffer)           UART RX IRQ       │              │                │
+ │                                                          │              │                │
+ │  port[].loopback_q ──────────────► PortWriteOne()        │              │                │
+ │  (echo received chars back to terminal)                  │              │                │
+ └──────────────────────────────────────────────────────────┘              └────────────────┘
 ```
 
 
