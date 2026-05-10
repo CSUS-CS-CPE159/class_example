@@ -52,7 +52,7 @@ After studying this example you should be able to:
 ```
  ┌────────────────────────────────────────────────────────┐
  │              User Processes                            │
- │  TermProc: PortWrite() ─────┐   PortRead() ◄─          │
+ │  TermProc: PortWrite() ─────┐   PortRead()             │
  │                             │   (blocks on read_sid)   │
  │  Init:  cons_kbhit loop     │     ▲                    │
  └─────────────────────────────┼─────┼────────────────────┘
