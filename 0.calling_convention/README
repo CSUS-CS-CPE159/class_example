@@ -1,17 +1,33 @@
-### how to run
+# Calling Convention Example
 
+## Overview
+This example demonstrates the x86 calling convention and how function parameters are passed on the stack. By debugging with GDB and observing stack frames, you can understand how function calls work at the assembly level.
+
+## Learning Objectives
+- Understand x86 calling conventions (parameter passing via stack)
+- See how the call stack is organized during function calls
+- Learn to use GDB to inspect stack frames and memory
+- Understand the role of the stack pointer (esp) and base pointer (ebp)
+
+## Build Instructions
 ```
 make
 make gdb
 ```
 
-observe stack(sp register) 
-GDB:
+## How to Debug
+
+Start GDB:
 ```
-Type "apropos word" to search for commands related to "word"...
-Reading symbols from a.out...
+make gdb
+```
+
+Then in GDB, try these commands to observe the call stack:
+
+```gdb
 (gdb) b main
 Breakpoint 1 at 0x11c6: file main.c, line 8.
+
 (gdb) run
 Starting program: /home/spede/Desktop/class_example/call_convention/a.out
 [Thread debugging using libthread_db enabled]
@@ -19,8 +35,9 @@ Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
 
 Breakpoint 1, main () at main.c:8
 8	    int a = 1;
-(gdb) layout prev
-(gdb) si
+
+(gdb) layout prev      # Show registers and assembly
+(gdb) si                # Step one instruction
 (gdb) si
 (gdb) si
 (gdb) si
@@ -28,7 +45,30 @@ Breakpoint 1, main () at main.c:8
 (gdb) si
 (gdb) si
 add (a=1, b=2, c=3) at main.c:3
+
 (gdb) si
 (gdb)
 ```
 
+## Key Concepts
+
+### Stack Layout During Function Call
+When `add(a, b, c)` is called:
+1. Return address is pushed on the stack
+2. Function parameters are organized on the stack
+3. ESP (stack pointer) moves as local variables are allocated
+4. Parameters are accessible relative to the stack pointer
+
+### GDB Commands to Explore
+- `print $esp` - Print the current stack pointer value
+- `print $ebp` - Print the base pointer
+- `x/4x $esp` - Examine 4 words at the stack pointer
+- `layout asm` - Show assembly code view
+- `si` - Step one instruction
+- `ni` - Step one line
+
+## Related Concepts
+- x86 stack frame layout
+- Function prologue and epilogue (stack frame setup/teardown)
+- Parameter passing conventions
+- Local variable storage
